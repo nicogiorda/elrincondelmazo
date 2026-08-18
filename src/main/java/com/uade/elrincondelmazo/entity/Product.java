@@ -2,7 +2,6 @@ package com.uade.elrincondelmazo.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import org.springframework.boot.actuate.endpoint.web.Link;
 
 import java.util.Date;
 
