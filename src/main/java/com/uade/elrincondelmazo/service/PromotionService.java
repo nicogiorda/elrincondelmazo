@@ -1,5 +1,5 @@
 package com.uade.elrincondelmazo.service;
 
-public interface UserService {
+public interface PromotionService {
 
 }
