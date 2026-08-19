@@ -1,11 +1,17 @@
 package com.uade.elrincondelmazo.entity;
 
-import jakarta.persistence.*;
-import lombok.Data;
-
 import java.util.Date;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Data;
+
 @Entity
+@Table(name = "users") // Especifico el nombre de la tabla en la base de datos, lo recomienda supabase para evitar problemas con palabras reservadas
 @Data
 public class User {
 
