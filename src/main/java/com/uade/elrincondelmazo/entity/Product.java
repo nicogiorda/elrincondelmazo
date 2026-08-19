@@ -4,7 +4,9 @@ import com.uade.elrincondelmazo.enums.ProductType;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Data
@@ -21,13 +23,16 @@ public class Product {
     private String description;
 
     @Column
-    private Double price;
+    private BigDecimal price;
 
+    @Enumerated(EnumType.STRING)
     @Column
     private ProductType type;
 
-    @Column
-    private String image_url;
+    @ElementCollection
+    @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "image_url", nullable = false)
+    private List<String> imageUrls;
 
     @Column
     private int stock;

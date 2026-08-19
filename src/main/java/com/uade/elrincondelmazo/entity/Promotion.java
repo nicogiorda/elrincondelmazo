@@ -7,6 +7,7 @@ import com.uade.elrincondelmazo.enums.PromotionType;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Entity
@@ -23,6 +24,7 @@ public class Promotion {
     @Column
     private String description;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PromotionType type;
 
@@ -30,12 +32,13 @@ public class Promotion {
     private Double discountPercentage;
 
     @Column
-    private Integer minimumAmount;
+    private BigDecimal minimumAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "product_type", nullable = false)
     private ProductType productType;
 
+    @Enumerated(EnumType.STRING)
     @Column
     private PaymentMethod paymentMethod;
 
