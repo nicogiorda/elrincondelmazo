@@ -1,8 +1,7 @@
-import com.uade.elrincondelmazo.entity.Order;
-import com.uade.elrincondelmazo.entity.Promotion;
+package com.uade.elrincondelmazo.entity;
+
 import jakarta.persistence.*;
 import lombok.Data;
-
 import java.math.BigDecimal;
 
 @Entity
