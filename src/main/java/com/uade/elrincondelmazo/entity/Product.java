@@ -1,5 +1,6 @@
 package com.uade.elrincondelmazo.entity;
 
+import com.uade.elrincondelmazo.enums.ProductType;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -23,7 +24,7 @@ public class Product {
     private Double price;
 
     @Column
-    private String type;
+    private ProductType type;
 
     @Column
     private String image_url;
