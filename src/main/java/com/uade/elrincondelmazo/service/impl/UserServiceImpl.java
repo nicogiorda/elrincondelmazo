@@ -7,5 +7,5 @@ import com.uade.elrincondelmazo.service.UserService;
 @Service
 public class UserServiceImpl implements UserService {
 
-
+    
 }
