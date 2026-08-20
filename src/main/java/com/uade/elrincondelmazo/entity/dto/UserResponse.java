@@ -1,4 +1,4 @@
-package com.uade.elrincondelmazo.dto;
+package com.uade.elrincondelmazo.entity.dto;
 
 import lombok.Data;
 

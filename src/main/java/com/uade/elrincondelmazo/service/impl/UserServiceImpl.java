@@ -5,8 +5,8 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.uade.elrincondelmazo.dto.UpdateUserRequest;
 import com.uade.elrincondelmazo.entity.User;
+import com.uade.elrincondelmazo.entity.dto.UpdateUserRequest;
 import com.uade.elrincondelmazo.exception.UserNotFoundException;
 import com.uade.elrincondelmazo.service.UserService;
 import com.uade.elrincondelmazo.repository.UserRepository;

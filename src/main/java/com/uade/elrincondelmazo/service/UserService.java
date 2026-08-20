@@ -1,9 +1,7 @@
 package com.uade.elrincondelmazo.service;
 
-import java.util.Optional;
-
-import com.uade.elrincondelmazo.dto.UpdateUserRequest;
 import com.uade.elrincondelmazo.entity.User;
+import com.uade.elrincondelmazo.entity.dto.UpdateUserRequest;
 
 public interface UserService {
 

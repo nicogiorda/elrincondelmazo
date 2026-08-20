@@ -3,12 +3,13 @@ package com.uade.elrincondelmazo.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import com.uade.elrincondelmazo.entity.User;
+import com.uade.elrincondelmazo.entity.dto.UpdateUserRequest;
+import com.uade.elrincondelmazo.entity.dto.UserResponse;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.uade.elrincondelmazo.dto.UpdateUserRequest;
-import com.uade.elrincondelmazo.dto.UserResponse;
 import com.uade.elrincondelmazo.service.UserService;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/users")
-public class UserController {
+public class UsersController {
 
     @Autowired
     private UserService userService;
