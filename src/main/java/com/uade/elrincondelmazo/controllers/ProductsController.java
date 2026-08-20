@@ -1,0 +1,88 @@
+package com.uade.elrincondelmazo.controllers;
+
+import java.net.URI;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.uade.elrincondelmazo.entity.Product;
+import com.uade.elrincondelmazo.entity.dto.ProductRequest;
+import com.uade.elrincondelmazo.entity.dto.ProductResponse;
+import com.uade.elrincondelmazo.service.ProductService;
+
+@RestController
+@RequestMapping("/products")
+public class ProductsController {
+
+    @Autowired
+    private ProductService productService;
+
+    @GetMapping
+    public ResponseEntity<List<ProductResponse>> getProducts() {
+
+        List<ProductResponse> products = productService.getAllProducts()
+                .stream()
+                .map(ProductResponse::fromProduct)
+                .toList();
+
+        return ResponseEntity.ok(products);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductResponse> getProductById(
+            @PathVariable Long id) {
+
+        Product product = productService.getProductById(id);
+
+        return ResponseEntity.ok(
+                ProductResponse.fromProduct(product)
+        );
+    }
+
+    @PostMapping
+    public ResponseEntity<ProductResponse> createProduct(
+            @RequestBody ProductRequest productRequest) {
+
+        Product product = productService.createProduct(productRequest);
+
+        ProductResponse response =
+                ProductResponse.fromProduct(product);
+
+        URI location = URI.create("/products/" + product.getId());
+
+        return ResponseEntity
+                .created(location)
+                .body(response);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductResponse> updateProduct(
+            @PathVariable Long id,
+            @RequestBody ProductRequest productRequest) {
+
+        Product product =
+                productService.updateProduct(id, productRequest);
+
+        return ResponseEntity.ok(
+                ProductResponse.fromProduct(product)
+        );
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProduct(
+            @PathVariable Long id) {
+
+        productService.deleteProduct(id);
+
+        return ResponseEntity.noContent().build();
+    }
+}
