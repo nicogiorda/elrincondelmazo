@@ -23,7 +23,7 @@ public class User {
     private String email;
 
 
-    @Column (name = "password_hash ", nullable = false)
+    @Column (name = "password_hash", nullable = false)
     private String passwordHash;
 
     @Column(nullable = false)
@@ -33,10 +33,10 @@ public class User {
     private String lastName;
 
     @Enumerated(EnumType.STRING)
-    @Column
+    @Column(nullable = false)
     private Role role;
 
-    @Column
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
