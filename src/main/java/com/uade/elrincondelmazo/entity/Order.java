@@ -7,7 +7,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDateTime;
+
 
 @Entity
 @Data
@@ -23,7 +24,7 @@ public class Order {
     private User user;
 
     @Column
-    private Date orderDate;
+    private LocalDateTime orderDate;
 
     @Enumerated(EnumType.STRING)
     @Column

@@ -8,7 +8,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDateTime;
+
 
 @Entity
 @Data
@@ -46,10 +47,10 @@ public class Promotion {
     private Boolean stackable;
 
     @Column(nullable = false)
-    private Date startDate;
+    private LocalDateTime startDate;
 
     @Column
-    private Date endDate;
+    private LocalDateTime endDate;
 
     @Column
     private Boolean active;

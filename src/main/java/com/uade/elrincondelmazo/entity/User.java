@@ -1,13 +1,10 @@
 package com.uade.elrincondelmazo.entity;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+
+import com.uade.elrincondelmazo.enums.Role;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
@@ -17,7 +14,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
+    private Long id;
 
     @Column (unique = true, nullable = false)
     private String username;
@@ -25,22 +22,24 @@ public class User {
     @Column (unique = true, nullable = false)
     private String email;
 
-    @Column (nullable = false)
-    private String password_hash;
 
-    @Column
+    @Column (name = "password_hash ", nullable = false)
+    private String passwordHash;
+
+    @Column(nullable = false)
     private String firstName;
 
-    @Column
+    @Column(nullable = false)
     private String lastName;
 
+    @Enumerated(EnumType.STRING)
     @Column
-    private String role;
+    private Role role;
 
     @Column
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
-    @Column
+    @Column(nullable = false)
     private Boolean active;
 
 

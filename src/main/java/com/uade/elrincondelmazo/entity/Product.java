@@ -5,7 +5,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDateTime;
+
 import java.util.List;
 
 @Entity
@@ -41,7 +42,7 @@ public class Product {
     private String status;
 
     @Column
-    private Date  created_at;
+    private LocalDateTime created_at;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn (name = "seller_id", nullable = false)
