@@ -17,15 +17,17 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
+    @Column(nullable = false)
     private Integer quantity;
 
-    @ManyToOne
-    @JoinColumn(name = "cart_id", referencedColumnName = "id")
+
+    ///no puede existir un cartItem sin cart y sin product, por eso optional = false
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "cart_id", nullable = false)
     private Cart cart;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "product_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
 

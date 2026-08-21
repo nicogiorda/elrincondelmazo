@@ -1,5 +1,6 @@
 package com.uade.elrincondelmazo.entity;
 
+import com.uade.elrincondelmazo.enums.ProductStatus;
 import com.uade.elrincondelmazo.enums.ProductType;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -39,7 +40,7 @@ public class Product {
     private int stock;
 
     @Column
-    private String status;
+    private ProductStatus status;
 
     @Column
     private LocalDateTime created_at;

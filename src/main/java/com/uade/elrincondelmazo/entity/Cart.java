@@ -15,11 +15,16 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    /**
+    - Relacion obligatoria porque no deberia existir un carrito sin User
+    - Relacion OneToOne porque un User solo puede tener un carrito
+    - unique = true para que un User no pueda tener mas de un carrito
+     */
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    @Column
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
 }
