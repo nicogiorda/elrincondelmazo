@@ -13,8 +13,6 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
     ///El CRUD basico viene heredado de JpaRepository
 
-    List<CartItem> findAll();
-
     Optional<CartItem> findByCart_IdAndProduct_Id(Long cartId, Long productId);
 
     List<CartItem> findByCart_Id(Long cartId);
