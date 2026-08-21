@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.uade.elrincondelmazo.entity.Product;
+import com.uade.elrincondelmazo.enums.ProductStatus;
 import com.uade.elrincondelmazo.enums.ProductType;
 
 import lombok.Data;
@@ -24,7 +25,7 @@ public class ProductResponse {
     private ProductType type;
     private List<String> imageUrls;
     private Integer stock;
-    private String status;
+    private ProductStatus status;
     private LocalDateTime createdAt;
 
     private Long sellerId;

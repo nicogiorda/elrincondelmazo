@@ -1,14 +1,25 @@
 package com.uade.elrincondelmazo.entity;
 
-import com.uade.elrincondelmazo.enums.ProductStatus;
-import com.uade.elrincondelmazo.enums.ProductType;
-import jakarta.persistence.*;
-import lombok.Data;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
 import java.util.List;
+
+import com.uade.elrincondelmazo.enums.ProductStatus;
+import com.uade.elrincondelmazo.enums.ProductType;
+
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import lombok.Data;
 
 @Entity
 @Data
@@ -39,6 +50,7 @@ public class Product {
     @Column
     private int stock;
 
+    @Enumerated(EnumType.STRING)
     @Column
     private ProductStatus status;
 

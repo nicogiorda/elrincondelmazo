@@ -11,12 +11,14 @@ import com.uade.elrincondelmazo.entity.Collection;
 import com.uade.elrincondelmazo.entity.Product;
 import com.uade.elrincondelmazo.entity.User;
 import com.uade.elrincondelmazo.entity.dto.ProductRequest;
+import com.uade.elrincondelmazo.enums.ProductStatus;
 import com.uade.elrincondelmazo.exception.InvalidProductException;
 import com.uade.elrincondelmazo.exception.ResourceNotFoundException;
 import com.uade.elrincondelmazo.repository.CollectionRepository;
 import com.uade.elrincondelmazo.repository.ProductRepository;
 import com.uade.elrincondelmazo.repository.UserRepository;
 import com.uade.elrincondelmazo.service.ProductService;
+import com.uade.elrincondelmazo.enums.ProductStatus;
 
 
 @Service
@@ -102,7 +104,7 @@ public class ProductServiceImpl implements ProductService {
         product.setImageUrls(request.getImageUrls());
         product.setStock(request.getStock());
 
-        product.setStatus("ACTIVE");
+        product.setStatus(ProductStatus.ACTIVO);
         product.setCreated_at(LocalDateTime.now());
 
         product.setSeller(seller);
