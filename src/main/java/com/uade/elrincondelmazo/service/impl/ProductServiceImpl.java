@@ -18,8 +18,6 @@ import com.uade.elrincondelmazo.repository.CollectionRepository;
 import com.uade.elrincondelmazo.repository.ProductRepository;
 import com.uade.elrincondelmazo.repository.UserRepository;
 import com.uade.elrincondelmazo.service.ProductService;
-import com.uade.elrincondelmazo.enums.ProductStatus;
-
 
 @Service
 public class ProductServiceImpl implements ProductService {
