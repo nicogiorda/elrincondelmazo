@@ -8,4 +8,5 @@ import com.uade.elrincondelmazo.entity.Collection;
 @Repository
 public interface CollectionRepository extends JpaRepository<Collection, Long> {
     
+
 }
