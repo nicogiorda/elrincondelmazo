@@ -1,10 +1,127 @@
 package com.uade.elrincondelmazo.service.impl;
 
+import com.uade.elrincondelmazo.entity.Cart;
+import com.uade.elrincondelmazo.entity.CartItem;
+import com.uade.elrincondelmazo.entity.User;
+import com.uade.elrincondelmazo.entity.dto.CartItemResponse;
+import com.uade.elrincondelmazo.entity.dto.CartResponse;
+import com.uade.elrincondelmazo.exception.ResourceNotFoundException;
+import com.uade.elrincondelmazo.repository.CartItemRepository;
+import com.uade.elrincondelmazo.repository.CartRepository;
+import com.uade.elrincondelmazo.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.uade.elrincondelmazo.service.CartService;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Service
 public class CartServiceImpl implements CartService {
+
+
+    private final CartRepository cartRepository;
+    private final UserRepository userRepository;
+    private final CartItemRepository cartItemRepository;
+
+
+    @Autowired
+    public CartServiceImpl(
+            CartRepository cartRepository,
+            UserRepository userRepository,
+            CartItemRepository cartItemRepository) {
+
+        this.cartRepository = cartRepository;
+        this.userRepository = userRepository;
+        this.cartItemRepository = cartItemRepository;
+    }
+
+
+    @Override
+    public CartResponse getOrCreateCart(Long userId) {
+
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseGet(() -> createCart(userId));
+
+        return toCartResponse(cart);
+    }
+
+
+
+    private Cart createCart(Long userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Usuario no encontrado con id: " + userId
+                        )
+                );
+
+        Cart cart = new Cart();
+        cart.setUser(user);
+        cart.setCreatedAt(LocalDateTime.now());
+
+        return cartRepository.save(cart);
+    }
+
+
+    /**
+     * Funcion que calcula el subtotal del carrito a partir del precio unitario de los items.
+     * Es privada porque es una funcion interna de la clase y no necesita ser expuesta a otras clases.
+     * @param items
+     * @return subtotal del carrito como BigDecimal
+     */
+    private BigDecimal calculateSubtotal(List<CartItem> items) {
+
+        return items.stream()
+                .map(item -> item.getProduct().getPrice()
+                                .multiply(BigDecimal.valueOf(item.getQuantity()))
+                ).reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    // Funciones de mapeo de entidades a DTOs
+
+    ///Transforma un CartItem a un CartItemResponse
+    private CartItemResponse toCartItemResponse(CartItem item) {
+
+        CartItemResponse response = new CartItemResponse();
+
+        response.setId(item.getId());
+        response.setProductId(item.getProduct().getId());
+        response.setProductName(item.getProduct().getName());
+        response.setProductImages(item.getProduct().getImageUrls());
+        response.setUnitPrice(item.getProduct().getPrice());
+        response.setQuantity(item.getQuantity());
+
+        response.setSubtotal(
+                item.getProduct().getPrice()
+                        .multiply(BigDecimal.valueOf(item.getQuantity()))
+        );
+
+        return response;
+    }
+
+    ///Transforma un Cart a un CartResponse
+    private CartResponse toCartResponse(Cart cart) {
+
+        List<CartItem> items =
+                cartItemRepository.findByCart_Id(cart.getId());
+
+        CartResponse response = new CartResponse();
+
+        response.setId(cart.getId());
+
+        response.setItems(
+                items.stream()
+                        .map(item -> toCartItemResponse(item))
+                        .toList()
+        );
+
+        response.setSubtotal(calculateSubtotal(items));
+
+        return response;
+    }
 
 }
