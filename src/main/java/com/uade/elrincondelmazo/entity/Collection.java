@@ -1,7 +1,11 @@
 package com.uade.elrincondelmazo.entity;
 
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.Data;
 
 @Entity
@@ -15,7 +19,7 @@ public class Collection {
     @Column(unique = true, nullable = false)
     private String name;
 
-    @Column
+    @Column (nullable = true)
     private String description;
 
 }
