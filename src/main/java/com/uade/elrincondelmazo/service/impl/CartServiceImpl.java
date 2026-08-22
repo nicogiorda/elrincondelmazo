@@ -2,12 +2,17 @@ package com.uade.elrincondelmazo.service.impl;
 
 import com.uade.elrincondelmazo.entity.Cart;
 import com.uade.elrincondelmazo.entity.CartItem;
+import com.uade.elrincondelmazo.entity.Product;
 import com.uade.elrincondelmazo.entity.User;
+import com.uade.elrincondelmazo.entity.dto.AddCartItemRequest;
 import com.uade.elrincondelmazo.entity.dto.CartItemResponse;
 import com.uade.elrincondelmazo.entity.dto.CartResponse;
+import com.uade.elrincondelmazo.enums.ProductStatus;
+import com.uade.elrincondelmazo.exception.InvalidCartException;
 import com.uade.elrincondelmazo.exception.ResourceNotFoundException;
 import com.uade.elrincondelmazo.repository.CartItemRepository;
 import com.uade.elrincondelmazo.repository.CartRepository;
+import com.uade.elrincondelmazo.repository.ProductRepository;
 import com.uade.elrincondelmazo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,25 +30,81 @@ public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
     private final UserRepository userRepository;
     private final CartItemRepository cartItemRepository;
-
+    private final ProductRepository productRepository;
 
     @Autowired
     public CartServiceImpl(
             CartRepository cartRepository,
             UserRepository userRepository,
-            CartItemRepository cartItemRepository) {
+            CartItemRepository cartItemRepository, ProductRepository productRepository) {
 
         this.cartRepository = cartRepository;
         this.userRepository = userRepository;
         this.cartItemRepository = cartItemRepository;
+        this.productRepository = productRepository;
     }
 
 
     @Override
     public CartResponse getOrCreateCart(Long userId) {
 
-        Cart cart = cartRepository.findByUserId(userId)
-                .orElseGet(() -> createCart(userId));
+        return toCartResponse(getOrCreateCartEntity(userId));
+    }
+
+
+    @Override
+    public CartResponse addItem(Long userId, AddCartItemRequest request) {
+
+        Product product = productRepository.findById(request.getProductId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Producto no encontrado con id: " + request.getProductId()
+                        )
+                );
+
+        if (request.getQuantity() == null || request.getQuantity() <= 0) {
+            throw new InvalidCartException("La cantidad debe ser mayor a cero");
+        }
+
+        if (product.getStatus() != ProductStatus.ACTIVO) {
+            throw new InvalidCartException("El producto no está disponible");
+        }
+
+        if (product.getSeller().getId().equals(userId)) {
+            throw new InvalidCartException(
+                    "No se puede agregar al carrito un producto propio"
+            );
+        }
+
+        Cart cart = getOrCreateCartEntity(userId);
+
+        CartItem item = cartItemRepository
+                .findByCart_IdAndProduct_Id(cart.getId(), product.getId())
+                .orElse(null);
+
+        if (item == null) {
+
+            if (request.getQuantity() > product.getStock()) {
+                throw new InvalidCartException("Stock insuficiente");
+            }
+
+            item = new CartItem();
+            item.setCart(cart);
+            item.setProduct(product);
+            item.setQuantity(request.getQuantity());
+
+        } else {
+
+            int newQuantity = item.getQuantity() + request.getQuantity();
+
+            if (newQuantity > product.getStock()) {
+                throw new InvalidCartException("Stock insuficiente");
+            }
+
+            item.setQuantity(newQuanti ty);
+        }
+
+        cartItemRepository.save(item);
 
         return toCartResponse(cart);
     }
@@ -66,6 +127,11 @@ public class CartServiceImpl implements CartService {
         return cartRepository.save(cart);
     }
 
+
+    private Cart getOrCreateCartEntity(Long userId) {
+        return cartRepository.findByUserId(userId)
+                .orElseGet(() -> createCart(userId));
+    }
 
     /**
      * Funcion que calcula el subtotal del carrito a partir del precio unitario de los items.
