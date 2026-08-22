@@ -7,6 +7,7 @@ import com.uade.elrincondelmazo.entity.User;
 import com.uade.elrincondelmazo.entity.dto.AddCartItemRequest;
 import com.uade.elrincondelmazo.entity.dto.CartItemResponse;
 import com.uade.elrincondelmazo.entity.dto.CartResponse;
+import com.uade.elrincondelmazo.entity.dto.UpdateCartItemQuantityRequest;
 import com.uade.elrincondelmazo.enums.ProductStatus;
 import com.uade.elrincondelmazo.exception.InvalidCartException;
 import com.uade.elrincondelmazo.exception.ResourceNotFoundException;
@@ -101,7 +102,7 @@ public class CartServiceImpl implements CartService {
                 throw new InvalidCartException("Stock insuficiente");
             }
 
-            item.setQuantity(newQuanti ty);
+            item.setQuantity(newQuantity);
         }
 
         cartItemRepository.save(item);
@@ -132,6 +133,53 @@ public class CartServiceImpl implements CartService {
         return cartRepository.findByUserId(userId)
                 .orElseGet(() -> createCart(userId));
     }
+
+
+    @Override
+    public CartResponse updateItemQuantity(
+            Long userId,
+            Long cartItemId,
+            UpdateCartItemQuantityRequest request) {
+
+        if (request.getQuantity() == null || request.getQuantity() <= 0) {
+            throw new InvalidCartException(
+                    "La cantidad debe ser mayor a cero"
+            );
+        }
+
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Carrito no encontrado para el usuario con id: " + userId
+                        )
+                );
+
+        CartItem item = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Item del carrito no encontrado con id: " + cartItemId
+                        )
+                );
+
+        if (!item.getCart().getId().equals(cart.getId())) {
+            throw new ResourceNotFoundException(
+                    "El item no pertenece al carrito del usuario"
+            );
+        }
+
+        if (request.getQuantity() > item.getProduct().getStock()) {
+            throw new InvalidCartException(
+                    "Stock insuficiente"
+            );
+        }
+
+        item.setQuantity(request.getQuantity());
+
+        cartItemRepository.save(item);
+
+        return toCartResponse(cart);
+    }
+
 
     /**
      * Funcion que calcula el subtotal del carrito a partir del precio unitario de los items.
