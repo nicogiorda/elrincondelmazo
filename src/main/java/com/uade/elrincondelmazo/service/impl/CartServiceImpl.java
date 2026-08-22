@@ -181,6 +181,35 @@ public class CartServiceImpl implements CartService {
     }
 
 
+    @Override
+    public CartResponse removeItem(Long userId, Long cartItemId) {
+
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Carrito no encontrado para el usuario con id: " + userId
+                        )
+                );
+
+        CartItem item = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Item del carrito no encontrado con id: " + cartItemId
+                        )
+                );
+
+        if (!item.getCart().getId().equals(cart.getId())) {
+            throw new ResourceNotFoundException(
+                    "El item no pertenece al carrito del usuario"
+            );
+        }
+
+        cartItemRepository.delete(item);
+
+        return toCartResponse(cart);
+    }
+
+
     /**
      * Funcion que calcula el subtotal del carrito a partir del precio unitario de los items.
      * Es privada porque es una funcion interna de la clase y no necesita ser expuesta a otras clases.
