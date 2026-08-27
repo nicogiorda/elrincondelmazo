@@ -2,9 +2,10 @@ package com.uade.elrincondelmazo.service.impl;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.uade.elrincondelmazo.entity.Collection;
@@ -12,6 +13,7 @@ import com.uade.elrincondelmazo.entity.Product;
 import com.uade.elrincondelmazo.entity.User;
 import com.uade.elrincondelmazo.entity.dto.ProductRequest;
 import com.uade.elrincondelmazo.enums.ProductStatus;
+import com.uade.elrincondelmazo.enums.ProductType;
 import com.uade.elrincondelmazo.exception.InvalidProductException;
 import com.uade.elrincondelmazo.exception.ResourceNotFoundException;
 import com.uade.elrincondelmazo.repository.CollectionRepository;
@@ -102,7 +104,11 @@ public class ProductServiceImpl implements ProductService {
         product.setImageUrls(request.getImageUrls());
         product.setStock(request.getStock());
 
+        if (request.getStock() == 0) {
+        product.setStatus(ProductStatus.AGOTADO);
+        } else {
         product.setStatus(ProductStatus.ACTIVO);
+        }
         product.setCreated_at(LocalDateTime.now());
 
         product.setSeller(seller);
@@ -111,10 +117,44 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.save(product);
     }
 
-    @Override
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
-    }
+        @Override
+        public Page<Product> getProducts(
+                String search,
+                ProductType type,
+                Long collectionId,
+                BigDecimal minPrice,
+                BigDecimal maxPrice,
+                PageRequest pageRequest) {
+
+        if (minPrice != null && minPrice.compareTo(BigDecimal.ZERO) < 0) {
+                throw new InvalidProductException(
+                        "El precio minimo no puede ser negativo");
+        }
+
+        if (maxPrice != null && maxPrice.compareTo(BigDecimal.ZERO) < 0) {
+                throw new InvalidProductException(
+                        "El precio maximo no puede ser negativo");
+        }
+
+        if (minPrice != null && maxPrice != null
+                && minPrice.compareTo(maxPrice) > 0) {
+                throw new InvalidProductException(
+                        "El precio minimo no puede ser mayor al precio maximo");
+        }
+
+        if (search != null && search.isBlank()) {
+                search = null;
+        }
+
+        return productRepository.findProducts(
+                search,
+                type,
+                collectionId,
+                minPrice,
+                maxPrice,
+                pageRequest
+        );
+        }
 
     @Override
     public Product getProductById(Long id) {
@@ -154,6 +194,11 @@ public class ProductServiceImpl implements ProductService {
     product.setType(request.getType());
     product.setImageUrls(request.getImageUrls());
     product.setStock(request.getStock());
+    if (request.getStock() == 0) {
+    product.setStatus(ProductStatus.AGOTADO);
+} else if (product.getStatus() == ProductStatus.AGOTADO) {
+    product.setStatus(ProductStatus.ACTIVO);
+}
     product.setSeller(seller);
     product.setCollection(collection);
 
