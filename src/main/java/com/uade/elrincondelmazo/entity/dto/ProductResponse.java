@@ -10,8 +10,8 @@ import com.uade.elrincondelmazo.enums.ProductType;
 
 import lombok.Data;
 //**
-//  Product referencia directamente a User. 
-// Si devolviéramos toda la entidad, podríamos terminar serializando datos del usuario que no queremos exponer. 
+//  Product referencia directamente a User.
+// Si devolviéramos toda la entidad, podríamos terminar serializando datos del usuario que no queremos exponer.
 // Con este DTO nosotros decidimos exactamente qué sale por la API.
 //  */
 
@@ -29,7 +29,7 @@ public class ProductResponse {
     private LocalDateTime createdAt;
 
     private Long sellerId;
-    private String sellerUsername;
+    private String sellerName;
 
     private Long collectionId;
     private String collectionName;
@@ -49,7 +49,7 @@ public class ProductResponse {
         response.setCreatedAt(product.getCreated_at());
 
         response.setSellerId(product.getSeller().getId());
-        response.setSellerUsername(product.getSeller().getUsername());
+        response.setSellerName(product.getSeller().getFirstName() + " " + product.getSeller().getLastName());
 
         response.setCollectionId(product.getCollection().getId());
         response.setCollectionName(product.getCollection().getName());

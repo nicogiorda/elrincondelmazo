@@ -7,8 +7,6 @@ public interface UserService {
 
     User getById(Long id);
 
-    User getByUsername(String username);
-
     User getByEmail(String email);
 
     User updateUser(Long id, UpdateUserRequest request);

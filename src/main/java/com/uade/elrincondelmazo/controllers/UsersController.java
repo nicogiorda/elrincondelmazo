@@ -15,7 +15,6 @@ import com.uade.elrincondelmazo.service.UserService;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -30,15 +29,8 @@ public class UsersController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getById(@PathVariable Long id) {
-        
-        User user = userService.getById(id);
 
-        return ResponseEntity.ok(toResponse(user));
-    }
-    
-    @GetMapping("/username/{username}")
-    public ResponseEntity<UserResponse> getByUsername(@PathVariable String username) {
-        User user = userService.getByUsername(username);
+        User user = userService.getById(id);
 
         return ResponseEntity.ok(toResponse(user));
     }
@@ -71,13 +63,12 @@ public class UsersController {
         UserResponse response = new UserResponse();
 
         response.setId(user.getId());
-        response.setUsername(user.getUsername());
         response.setEmail(user.getEmail());
         response.setFirstName(user.getFirstName());
         response.setLastName(user.getLastName());
 
         return response;
     }
-    
+
 
 }
