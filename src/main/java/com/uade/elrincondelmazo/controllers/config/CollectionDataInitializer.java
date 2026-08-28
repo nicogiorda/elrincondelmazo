@@ -1,4 +1,4 @@
-package com.uade.elrincondelmazo.config;
+package com.uade.elrincondelmazo.controllers.config;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
