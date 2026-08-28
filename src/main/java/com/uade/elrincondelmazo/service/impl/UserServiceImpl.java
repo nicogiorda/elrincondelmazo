@@ -1,7 +1,5 @@
 package com.uade.elrincondelmazo.service.impl;
 
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,11 +25,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getByUsername(String username) {
-        return userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
-    }
-
-    @Override
     public User getByEmail(String email){
         return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
     }
@@ -41,7 +34,7 @@ public class UserServiceImpl implements UserService {
 
         User user = getById(id);
 
-        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
 

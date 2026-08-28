@@ -36,13 +36,6 @@ public class UsersController {
         return ResponseEntity.ok(toResponse(user));
     }
     
-    @GetMapping("/username/{username}")
-    public ResponseEntity<UserResponse> getByUsername(@PathVariable String username) {
-        User user = userService.getByUsername(username);
-
-        return ResponseEntity.ok(toResponse(user));
-    }
-
     @GetMapping("/email/{email}")
     public ResponseEntity<UserResponse> getByEmail(@PathVariable String email) {
         User user = userService.getByEmail(email);
@@ -71,7 +64,6 @@ public class UsersController {
         UserResponse response = new UserResponse();
 
         response.setId(user.getId());
-        response.setUsername(user.getUsername());
         response.setEmail(user.getEmail());
         response.setFirstName(user.getFirstName());
         response.setLastName(user.getLastName());

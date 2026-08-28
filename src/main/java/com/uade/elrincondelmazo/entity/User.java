@@ -17,9 +17,6 @@ public class User {
     private Long id;
 
     @Column (unique = true, nullable = false)
-    private String username;
-
-    @Column (unique = true, nullable = false)
     private String email;
 
 
@@ -41,7 +38,5 @@ public class User {
 
     @Column(nullable = false)
     private Boolean active;
-
-
 
 }
