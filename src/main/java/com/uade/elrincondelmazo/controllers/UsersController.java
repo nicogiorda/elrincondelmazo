@@ -15,7 +15,6 @@ import com.uade.elrincondelmazo.service.UserService;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -30,12 +29,12 @@ public class UsersController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getById(@PathVariable Long id) {
-        
+
         User user = userService.getById(id);
 
         return ResponseEntity.ok(toResponse(user));
     }
-    
+
     @GetMapping("/email/{email}")
     public ResponseEntity<UserResponse> getByEmail(@PathVariable String email) {
         User user = userService.getByEmail(email);
@@ -70,6 +69,6 @@ public class UsersController {
 
         return response;
     }
-    
+
 
 }

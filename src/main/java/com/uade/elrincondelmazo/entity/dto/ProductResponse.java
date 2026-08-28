@@ -29,6 +29,7 @@ public class ProductResponse {
     private LocalDateTime createdAt;
 
     private Long sellerId;
+    private String sellerName;
 
     private Long collectionId;
     private String collectionName;
@@ -48,6 +49,7 @@ public class ProductResponse {
         response.setCreatedAt(product.getCreated_at());
 
         response.setSellerId(product.getSeller().getId());
+        response.setSellerName(product.getSeller().getFirstName() + " " + product.getSeller().getLastName());
 
         response.setCollectionId(product.getCollection().getId());
         response.setCollectionName(product.getCollection().getName());
