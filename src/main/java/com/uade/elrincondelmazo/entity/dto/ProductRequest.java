@@ -22,7 +22,5 @@ public class ProductRequest {
 
     private Integer stock;
 
-    private Long sellerId;
-
     private Long collectionId;
 }

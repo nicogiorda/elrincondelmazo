@@ -102,24 +102,32 @@ public class ProductsController {
         }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductResponse> updateProduct(
-            @PathVariable Long id,
-            @RequestBody ProductRequest productRequest) {
+public ResponseEntity<ProductResponse> updateProduct(
+        @AuthenticationPrincipal User user,
+        @PathVariable Long id,
+        @RequestBody ProductRequest productRequest) {
 
-        Product product =
-                productService.updateProduct(id, productRequest);
+    Product product = productService.updateProduct(
+            user.getId(),
+            id,
+            productRequest
+    );
 
-        return ResponseEntity.ok(
-                ProductResponse.fromProduct(product)
-        );
-    }
+    return ResponseEntity.ok(
+            ProductResponse.fromProduct(product)
+    );
+}
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(
-            @PathVariable Long id) {
+public ResponseEntity<Void> deleteProduct(
+        @AuthenticationPrincipal User user,
+        @PathVariable Long id) {
 
-        productService.deleteProduct(id);
+    productService.deleteProduct(
+            user.getId(),
+            id
+    );
 
-        return ResponseEntity.noContent().build();
-    }
+    return ResponseEntity.noContent().build();
+}
 }

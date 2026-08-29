@@ -14,7 +14,9 @@ import com.uade.elrincondelmazo.entity.User;
 import com.uade.elrincondelmazo.entity.dto.ProductRequest;
 import com.uade.elrincondelmazo.enums.ProductStatus;
 import com.uade.elrincondelmazo.enums.ProductType;
+import com.uade.elrincondelmazo.enums.Role;
 import com.uade.elrincondelmazo.exception.InvalidProductException;
+import com.uade.elrincondelmazo.exception.ProductAccessDeniedException;
 import com.uade.elrincondelmazo.exception.ResourceNotFoundException;
 import com.uade.elrincondelmazo.repository.CollectionRepository;
 import com.uade.elrincondelmazo.repository.ProductRepository;
@@ -156,22 +158,15 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + id));
     }
 
-    @Override
     public Product updateProduct(
+        Long userId,
         Long id,
         ProductRequest request) {
 
     validateProduct(request);
 
     Product product = getProductById(id);
-
-    User seller = userRepository.findById(request.getSellerId())
-            .orElseThrow(() ->
-                    new ResourceNotFoundException(
-                            "Vendedor no encontrado con id: "
-                                    + request.getSellerId()
-                    )
-            );
+    validateOwnerOrAdmin(product, userId);
 
     Collection collection = collectionRepository
             .findById(request.getCollectionId())
@@ -193,15 +188,44 @@ public class ProductServiceImpl implements ProductService {
 } else if (product.getStatus() == ProductStatus.AGOTADO) {
     product.setStatus(ProductStatus.ACTIVO);
 }
-    product.setSeller(seller);
     product.setCollection(collection);
 
     return productRepository.save(product);
     }
     
     @Override
-    public void deleteProduct(Long id) {
-        Product product = getProductById(id);
-        productRepository.delete(product);
+public void deleteProduct(
+        Long userId,
+        Long id) {
+
+    Product product = getProductById(id);
+
+    validateOwnerOrAdmin(product, userId);
+
+    productRepository.delete(product);
+}
+
+    private void validateOwnerOrAdmin(
+        Product product,
+        Long userId) {
+
+    User user = userRepository.findById(userId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException(
+                            "Usuario no encontrado con id: " + userId
+                    )
+            );
+
+    boolean isOwner =
+            product.getSeller().getId().equals(userId);
+
+    boolean isAdmin =
+            user.getRole() == Role.ADMIN;
+
+    if (!isOwner && !isAdmin) {
+        throw new ProductAccessDeniedException(
+                "No tenes permiso para modificar este producto"
+        );
     }
+}
 }
