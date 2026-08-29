@@ -26,206 +26,192 @@ import com.uade.elrincondelmazo.service.ProductService;
 @Service
 public class ProductServiceImpl implements ProductService {
 
-    @Autowired
-    private ProductRepository productRepository;
+        @Autowired
+        private ProductRepository productRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+        @Autowired
+        private UserRepository userRepository;
 
-    @Autowired
-    private CollectionRepository collectionRepository;
+        @Autowired
+        private CollectionRepository collectionRepository;
 
-    private void validateProduct(ProductRequest request) {
+        private void validateProduct(ProductRequest request) {
 
-        if (request.getName() == null || request.getName().isBlank()) {
-            throw new InvalidProductException("El nombre del producto es obligatorio");
+                if (request.getName() == null || request.getName().isBlank()) {
+                        throw new InvalidProductException("El nombre del producto es obligatorio");
+                }
+
+                if (request.getDescription() == null || request.getDescription().isBlank()) {
+                        throw new InvalidProductException("La descripcion del producto es obligatoria");
+                }
+
+                if (request.getPrice() == null ||
+                                request.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
+                        throw new InvalidProductException("El precio debe ser mayor a cero");
+                }
+
+                if (request.getType() == null) {
+                        throw new InvalidProductException("El tipo de producto es obligatorio");
+                }
+
+                if (request.getImageUrls() == null || request.getImageUrls().isEmpty()) {
+                        throw new InvalidProductException(
+                                        "El producto debe tener al menos una imagen");
+                }
+
+                if (request.getStock() == null || request.getStock() < 0) {
+                        throw new InvalidProductException(
+                                        "El stock no puede ser negativo");
+                }
+
+                if (request.getCollectionId() == null) {
+                        throw new InvalidProductException(
+                                        "La coleccion es obligatoria");
+                }
         }
 
-        if (request.getDescription() == null || request.getDescription().isBlank()) {
-            throw new InvalidProductException("La descripcion del producto es obligatoria");
+        @Override
+        public Product createProduct(Long userId, ProductRequest request) {
+
+                validateProduct(request);
+
+                User seller = userRepository.findById(userId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Usuario no encontrado con id: " + userId));
+
+                Collection collection = collectionRepository
+                                .findById(request.getCollectionId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Coleccion no encontrada con id: "
+                                                                + request.getCollectionId()));
+
+                Product product = new Product();
+
+                product.setName(request.getName());
+                product.setDescription(request.getDescription());
+                product.setPrice(request.getPrice());
+                product.setType(request.getType());
+                product.setImageUrls(request.getImageUrls());
+                product.setStock(request.getStock());
+
+                if (request.getStock() == 0) {
+                        product.setStatus(ProductStatus.AGOTADO);
+                } else {
+                        product.setStatus(ProductStatus.ACTIVO);
+                }
+                product.setCreated_at(LocalDateTime.now());
+
+                product.setSeller(seller);
+                product.setCollection(collection);
+
+                return productRepository.save(product);
         }
-
-        if (request.getPrice() == null ||
-                request.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidProductException("El precio debe ser mayor a cero");
-        }
-
-        if (request.getType() == null) {
-            throw new InvalidProductException("El tipo de producto es obligatorio");
-        }
-
-        if (request.getImageUrls() == null || request.getImageUrls().isEmpty()) {
-            throw new InvalidProductException(
-                    "El producto debe tener al menos una imagen");
-        }
-
-        if (request.getStock() == null || request.getStock() < 0) {
-            throw new InvalidProductException(
-                    "El stock no puede ser negativo");
-        }
-
-        if (request.getCollectionId() == null) {
-            throw new InvalidProductException(
-                    "La coleccion es obligatoria");
-        }
-    }
-
-    @Override
-    public Product createProduct(Long userId, ProductRequest request) {
-
-        validateProduct(request);
-
-        User seller = userRepository.findById(userId)
-        .orElseThrow(() ->
-                new ResourceNotFoundException(
-                        "Usuario no encontrado con id: " + userId
-                )
-        );
-
-        Collection collection = collectionRepository
-                .findById(request.getCollectionId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Coleccion no encontrada con id: "
-                                        + request.getCollectionId()
-                        )
-                );
-
-        Product product = new Product();
-
-        product.setName(request.getName());
-        product.setDescription(request.getDescription());
-        product.setPrice(request.getPrice());
-        product.setType(request.getType());
-        product.setImageUrls(request.getImageUrls());
-        product.setStock(request.getStock());
-
-        if (request.getStock() == 0) {
-        product.setStatus(ProductStatus.AGOTADO);
-        } else {
-        product.setStatus(ProductStatus.ACTIVO);
-        }
-        product.setCreated_at(LocalDateTime.now());
-
-        product.setSeller(seller);
-        product.setCollection(collection);
-
-        return productRepository.save(product);
-    }
 
         @Override
         public Page<Product> getProducts(
-                String search,
-                ProductType type,
-                Long collectionId,
-                BigDecimal minPrice,
-                BigDecimal maxPrice,
-                PageRequest pageRequest) {
+                        String search,
+                        ProductType type,
+                        Long collectionId,
+                        BigDecimal minPrice,
+                        BigDecimal maxPrice,
+                        PageRequest pageRequest) {
 
-        if (minPrice != null && minPrice.compareTo(BigDecimal.ZERO) < 0) {
-                throw new InvalidProductException(
-                        "El precio minimo no puede ser negativo");
+                if (minPrice != null && minPrice.compareTo(BigDecimal.ZERO) < 0) {
+                        throw new InvalidProductException(
+                                        "El precio minimo no puede ser negativo");
+                }
+
+                if (maxPrice != null && maxPrice.compareTo(BigDecimal.ZERO) < 0) {
+                        throw new InvalidProductException(
+                                        "El precio maximo no puede ser negativo");
+                }
+
+                if (minPrice != null && maxPrice != null
+                                && minPrice.compareTo(maxPrice) > 0) {
+                        throw new InvalidProductException(
+                                        "El precio minimo no puede ser mayor al precio maximo");
+                }
+
+                if (search != null && search.isBlank()) {
+                        search = null;
+                }
+
+                return productRepository.findProducts(
+                                search,
+                                type,
+                                collectionId,
+                                minPrice,
+                                maxPrice,
+                                pageRequest);
         }
 
-        if (maxPrice != null && maxPrice.compareTo(BigDecimal.ZERO) < 0) {
-                throw new InvalidProductException(
-                        "El precio maximo no puede ser negativo");
+        @Override
+        public Product getProductById(Long id) {
+                return productRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Producto no encontrado con id: " + id));
         }
 
-        if (minPrice != null && maxPrice != null
-                && minPrice.compareTo(maxPrice) > 0) {
-                throw new InvalidProductException(
-                        "El precio minimo no puede ser mayor al precio maximo");
+        @Override
+        public Product updateProduct(
+                        Long userId,
+                        Long id,
+                        ProductRequest request) {
+
+                validateProduct(request);
+
+                Product product = getProductById(id);
+                validateOwnerOrAdmin(product, userId);
+
+                Collection collection = collectionRepository
+                                .findById(request.getCollectionId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Coleccion no encontrada con id: "
+                                                                + request.getCollectionId()));
+
+                product.setName(request.getName());
+                product.setDescription(request.getDescription());
+                product.setPrice(request.getPrice());
+                product.setType(request.getType());
+                product.setImageUrls(request.getImageUrls());
+                product.setStock(request.getStock());
+                if (request.getStock() == 0) {
+                        product.setStatus(ProductStatus.AGOTADO);
+                } else if (product.getStatus() == ProductStatus.AGOTADO) {
+                        product.setStatus(ProductStatus.ACTIVO);
+                }
+                product.setCollection(collection);
+
+                return productRepository.save(product);
         }
 
-        if (search != null && search.isBlank()) {
-                search = null;
+        @Override
+        public void deleteProduct(
+                        Long userId,
+                        Long id) {
+
+                Product product = getProductById(id);
+
+                validateOwnerOrAdmin(product, userId);
+
+                productRepository.delete(product);
         }
 
-        return productRepository.findProducts(
-                search,
-                type,
-                collectionId,
-                minPrice,
-                maxPrice,
-                pageRequest
-        );
+        private void validateOwnerOrAdmin(
+                        Product product,
+                        Long userId) {
+
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Usuario no encontrado con id: " + userId));
+
+                boolean isOwner = product.getSeller().getId().equals(userId);
+
+                boolean isAdmin = user.getRole() == Role.ADMIN;
+
+                if (!isOwner && !isAdmin) {
+                        throw new ProductAccessDeniedException(
+                                        "No tenes permiso para modificar este producto");
+                }
         }
-
-    @Override
-    public Product getProductById(Long id) {
-        return productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + id));
-    }
-
-    public Product updateProduct(
-        Long userId,
-        Long id,
-        ProductRequest request) {
-
-    validateProduct(request);
-
-    Product product = getProductById(id);
-    validateOwnerOrAdmin(product, userId);
-
-    Collection collection = collectionRepository
-            .findById(request.getCollectionId())
-            .orElseThrow(() ->
-                    new ResourceNotFoundException(
-                            "Coleccion no encontrada con id: "
-                                    + request.getCollectionId()
-                    )
-            );
-
-    product.setName(request.getName());
-    product.setDescription(request.getDescription());
-    product.setPrice(request.getPrice());
-    product.setType(request.getType());
-    product.setImageUrls(request.getImageUrls());
-    product.setStock(request.getStock());
-    if (request.getStock() == 0) {
-    product.setStatus(ProductStatus.AGOTADO);
-} else if (product.getStatus() == ProductStatus.AGOTADO) {
-    product.setStatus(ProductStatus.ACTIVO);
-}
-    product.setCollection(collection);
-
-    return productRepository.save(product);
-    }
-    
-    @Override
-public void deleteProduct(
-        Long userId,
-        Long id) {
-
-    Product product = getProductById(id);
-
-    validateOwnerOrAdmin(product, userId);
-
-    productRepository.delete(product);
-}
-
-    private void validateOwnerOrAdmin(
-        Product product,
-        Long userId) {
-
-    User user = userRepository.findById(userId)
-            .orElseThrow(() ->
-                    new ResourceNotFoundException(
-                            "Usuario no encontrado con id: " + userId
-                    )
-            );
-
-    boolean isOwner =
-            product.getSeller().getId().equals(userId);
-
-    boolean isAdmin =
-            user.getRole() == Role.ADMIN;
-
-    if (!isOwner && !isAdmin) {
-        throw new ProductAccessDeniedException(
-                "No tenes permiso para modificar este producto"
-        );
-    }
-}
 }
