@@ -26,7 +26,16 @@ public interface ProductService {
         Long userId,
         ProductRequest productRequest
 );
-    Product updateProduct(Long id, ProductRequest productRequest);
+    
+Product updateProduct(
+        Long userId,
+        Long id,
+        ProductRequest productRequest
+);
 
-    void deleteProduct(Long id);
+void deleteProduct(
+        Long userId,
+        Long id
+);
+
 }
