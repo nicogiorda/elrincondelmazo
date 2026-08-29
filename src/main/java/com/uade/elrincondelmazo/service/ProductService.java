@@ -22,8 +22,10 @@ public interface ProductService {
 
     Product getProductById(Long id);
 
-    Product createProduct(ProductRequest productRequest);
-
+    Product createProduct(
+        Long userId,
+        ProductRequest productRequest
+);
     Product updateProduct(Long id, ProductRequest productRequest);
 
     void deleteProduct(Long id);
