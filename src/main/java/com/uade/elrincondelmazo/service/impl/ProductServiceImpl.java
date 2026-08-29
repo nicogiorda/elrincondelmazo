@@ -62,11 +62,6 @@ public class ProductServiceImpl implements ProductService {
                     "El stock no puede ser negativo");
         }
 
-        if (request.getSellerId() == null) {
-            throw new InvalidProductException(
-                    "El vendedor es obligatorio");
-        }
-
         if (request.getCollectionId() == null) {
             throw new InvalidProductException(
                     "La coleccion es obligatoria");
@@ -74,17 +69,16 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product createProduct(ProductRequest request) {
+    public Product createProduct(Long userId, ProductRequest request) {
 
         validateProduct(request);
 
-        User seller = userRepository.findById(request.getSellerId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Vendedor no encontrado con id: "
-                                        + request.getSellerId()
-                        )
-                );
+        User seller = userRepository.findById(userId)
+        .orElseThrow(() ->
+                new ResourceNotFoundException(
+                        "Usuario no encontrado con id: " + userId
+                )
+        );
 
         Collection collection = collectionRepository
                 .findById(request.getCollectionId())
