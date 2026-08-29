@@ -1,3 +1,4 @@
+package com.uade.elrincondelmazo.controllers.auth;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
