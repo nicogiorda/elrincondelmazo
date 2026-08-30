@@ -2,6 +2,7 @@ package com.uade.elrincondelmazo.controllers.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -18,34 +19,42 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthFilter;
-    private final AuthenticationProvider authenticationProvider;
+        private final JwtAuthenticationFilter jwtAuthFilter;
+        private final AuthenticationProvider authenticationProvider;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable)
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                .csrf(AbstractHttpConfigurer::disable)
 
-                .authorizeHttpRequests(req -> req
-                        .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/error/**").permitAll()
-                        .anyRequest().authenticated())
+                                .authorizeHttpRequests(req -> req
+                                                .requestMatchers("/api/v1/auth/**").permitAll()
+                                                .requestMatchers("/error/**").permitAll()
 
-                .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/products",
+                                                                "/products/**")
+                                                .permitAll()
 
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint((request, response, authException) -> response.sendError(
-                                HttpServletResponse.SC_UNAUTHORIZED,
-                                "Unauthorized")))
+                                                .anyRequest().authenticated())
 
-                .authenticationProvider(authenticationProvider)
+                                .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
 
-                .addFilterBefore(
-                        jwtAuthFilter,
-                        UsernamePasswordAuthenticationFilter.class);
+                                .exceptionHandling(exception -> exception
+                                                .authenticationEntryPoint((request, response, authException) -> response
+                                                                .sendError(
+                                                                                HttpServletResponse.SC_UNAUTHORIZED,
+                                                                                "Unauthorized")))
 
-        return http.build();
-    }
+                                .authenticationProvider(authenticationProvider)
+
+                                .addFilterBefore(
+                                                jwtAuthFilter,
+                                                UsernamePasswordAuthenticationFilter.class);
+
+                return http.build();
+        }
 }
 
 // falta plantear bien
