@@ -30,104 +30,96 @@ import com.uade.elrincondelmazo.service.ProductService;
 @RequestMapping("/products")
 public class ProductsController {
 
-    @Autowired
-    private ProductService productService;
+        @Autowired
+        private ProductService productService;
 
-    @GetMapping
+        @GetMapping
         public ResponseEntity<Page<ProductResponse>> getProducts(
-                @RequestParam(required = false) String search,
-                @RequestParam(required = false) ProductType type,
-                @RequestParam(required = false) Long collectionId,
-                @RequestParam(required = false) BigDecimal minPrice,
-                @RequestParam(required = false) BigDecimal maxPrice,
-                @RequestParam(defaultValue = "0") int page,
-                @RequestParam(defaultValue = "10") int size) {
+                        @RequestParam(required = false) String search,
+                        @RequestParam(required = false) ProductType type,
+                        @RequestParam(required = false) Long collectionId,
+                        @RequestParam(required = false) BigDecimal minPrice,
+                        @RequestParam(required = false) BigDecimal maxPrice,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size) {
 
-        if (page < 0) {
-                throw new InvalidProductException(
-                        "El numero de pagina no puede ser negativo");
+                if (page < 0) {
+                        throw new InvalidProductException(
+                                        "El numero de pagina no puede ser negativo");
+                }
+
+                if (size <= 0) {
+                        throw new InvalidProductException(
+                                        "El tamaño de pagina debe ser mayor a cero");
+                }
+
+                PageRequest pageRequest = PageRequest.of(page, size);
+
+                Page<ProductResponse> products = productService
+                                .getProducts(
+                                                search,
+                                                type,
+                                                collectionId,
+                                                minPrice,
+                                                maxPrice,
+                                                pageRequest)
+                                .map(ProductResponse::fromProduct);
+
+                return ResponseEntity.ok(products);
         }
 
-        if (size <= 0) {
-                throw new InvalidProductException(
-                        "El tamaño de pagina debe ser mayor a cero");
+        @GetMapping("/{id}")
+        public ResponseEntity<ProductResponse> getProductById(
+                        @PathVariable Long id) {
+
+                Product product = productService.getProductById(id);
+
+                return ResponseEntity.ok(
+                                ProductResponse.fromProduct(product));
         }
 
-        PageRequest pageRequest = PageRequest.of(page, size);
+        @PostMapping
+        public ResponseEntity<ProductResponse> createProduct(
+                        @AuthenticationPrincipal User user,
+                        @RequestBody ProductRequest productRequest) {
 
-        Page<ProductResponse> products = productService
-                .getProducts(
-                        search,
-                        type,
-                        collectionId,
-                        minPrice,
-                        maxPrice,
-                        pageRequest
-                )
-                .map(ProductResponse::fromProduct);
+                Product product = productService.createProduct(
+                                user.getId(),
+                                productRequest);
 
-        return ResponseEntity.ok(products);
+                ProductResponse response = ProductResponse.fromProduct(product);
+
+                URI location = URI.create("/products/" + product.getId());
+
+                return ResponseEntity
+                                .created(location)
+                                .body(response);
         }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ProductResponse> getProductById(
-            @PathVariable Long id) {
+        @PutMapping("/{id}")
+        public ResponseEntity<ProductResponse> updateProduct(
+                        @AuthenticationPrincipal User user,
+                        @PathVariable Long id,
+                        @RequestBody ProductRequest productRequest) {
 
-        Product product = productService.getProductById(id);
+                Product product = productService.updateProduct(
+                                user.getId(),
+                                id,
+                                productRequest);
 
-        return ResponseEntity.ok(
-                ProductResponse.fromProduct(product)
-        );
-    }
-
-    @PostMapping
-    public ResponseEntity<ProductResponse> createProduct(
-           @AuthenticationPrincipal User user,
-           @RequestBody ProductRequest productRequest) {
-
-        Product product = productService.createProduct(
-                user.getId(),
-                productRequest
-        );
-
-        ProductResponse response =
-                ProductResponse.fromProduct(product);
-
-        URI location =
-                URI.create("/products/" + product.getId());
-
-        return ResponseEntity
-                .created(location)
-                .body(response);
+                return ResponseEntity.ok(
+                                ProductResponse.fromProduct(product));
         }
 
-    @PutMapping("/{id}")
-public ResponseEntity<ProductResponse> updateProduct(
-        @AuthenticationPrincipal User user,
-        @PathVariable Long id,
-        @RequestBody ProductRequest productRequest) {
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> deleteProduct(
+                        @AuthenticationPrincipal User user,
+                        @PathVariable Long id) {
 
-    Product product = productService.updateProduct(
-            user.getId(),
-            id,
-            productRequest
-    );
+                productService.deleteProduct(
+                                user.getId(),
+                                id);
 
-    return ResponseEntity.ok(
-            ProductResponse.fromProduct(product)
-    );
-}
-
-    @DeleteMapping("/{id}")
-public ResponseEntity<Void> deleteProduct(
-        @AuthenticationPrincipal User user,
-        @PathVariable Long id) {
-
-    productService.deleteProduct(
-            user.getId(),
-            id
-    );
-
-    return ResponseEntity.noContent().build();
-}
+                return ResponseEntity.noContent().build();
+        }
 }

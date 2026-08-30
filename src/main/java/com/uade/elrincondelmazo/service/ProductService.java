@@ -17,25 +17,21 @@ public interface ProductService {
             Long collectionId,
             BigDecimal minPrice,
             BigDecimal maxPrice,
-            PageRequest pageRequest
-    );
+            PageRequest pageRequest);
 
     Product getProductById(Long id);
 
     Product createProduct(
-        Long userId,
-        ProductRequest productRequest
-);
-    
-Product updateProduct(
-        Long userId,
-        Long id,
-        ProductRequest productRequest
-);
+            Long userId,
+            ProductRequest productRequest);
 
-void deleteProduct(
-        Long userId,
-        Long id
-);
+    Product updateProduct(
+            Long userId,
+            Long id,
+            ProductRequest productRequest);
+
+    void deleteProduct(
+            Long userId,
+            Long id);
 
 }
