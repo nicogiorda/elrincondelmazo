@@ -1,4 +1,5 @@
 package com.uade.elrincondelmazo.entity.dto;
+
 import com.uade.elrincondelmazo.entity.Collection;
 
 import lombok.Data;
@@ -15,7 +16,7 @@ public class CollectionResponse {
         response.setId(collection.getId());
         response.setName(collection.getName());
         response.setDescription(collection.getDescription());
-        
+
         return response;
 
     }

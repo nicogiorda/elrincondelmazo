@@ -17,7 +17,7 @@ public class RegisterRequest {
     private String password;
 
     /*
-    No usamos atributo role porque si lo dejamos, alguien podría
-    autoplocamarse admin. De esta forma, se controla el rol del usuario
-    */
+     * No usamos atributo role porque si lo dejamos, alguien podría
+     * autoplocamarse admin. De esta forma, se controla el rol del usuario
+     */
 }

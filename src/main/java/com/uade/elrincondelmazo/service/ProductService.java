@@ -11,27 +11,27 @@ import com.uade.elrincondelmazo.enums.ProductType;
 
 public interface ProductService {
 
-    Page<Product> getProducts(
-            String search,
-            ProductType type,
-            Long collectionId,
-            BigDecimal minPrice,
-            BigDecimal maxPrice,
-            PageRequest pageRequest);
+        Page<Product> getProducts(
+                        String search,
+                        ProductType type,
+                        Long collectionId,
+                        BigDecimal minPrice,
+                        BigDecimal maxPrice,
+                        PageRequest pageRequest);
 
-    Product getProductById(Long id);
+        Product getProductById(Long id);
 
-    Product createProduct(
-            Long userId,
-            ProductRequest productRequest);
+        Product createProduct(
+                        Long userId,
+                        ProductRequest productRequest);
 
-    Product updateProduct(
-            Long userId,
-            Long id,
-            ProductRequest productRequest);
+        Product updateProduct(
+                        Long userId,
+                        Long id,
+                        ProductRequest productRequest);
 
-    void deleteProduct(
-            Long userId,
-            Long id);
+        void deleteProduct(
+                        Long userId,
+                        Long id);
 
 }

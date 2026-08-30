@@ -10,6 +10,6 @@ import com.uade.elrincondelmazo.entity.Collection;
 @Repository
 public interface CollectionRepository extends JpaRepository<Collection, Long> {
     Optional<Collection> findByName(String name);
-    
+
     boolean existsByName(String name);
 }

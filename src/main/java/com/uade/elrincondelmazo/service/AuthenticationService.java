@@ -32,8 +32,8 @@ public class AuthenticationService {
                 String email = request.getEmail().trim().toLowerCase();
 
                 if (repository.existsByEmail(email)) {
-                        throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un usuario registrado con este email"
-                        );
+                        throw new ResponseStatusException(HttpStatus.CONFLICT,
+                                        "Ya existe un usuario registrado con este email");
                 }
 
                 User user = User.builder()
@@ -57,9 +57,9 @@ public class AuthenticationService {
 
         public AuthenticationResponse authenticate(AuthenticationRequest request) {
 
-            String email = request.getEmail().trim().toLowerCase();
+                String email = request.getEmail().trim().toLowerCase();
 
-            authenticationManager.authenticate(
+                authenticationManager.authenticate(
                                 new UsernamePasswordAuthenticationToken(
                                                 email,
                                                 request.getPassword()));

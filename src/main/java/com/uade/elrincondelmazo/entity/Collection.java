@@ -1,6 +1,5 @@
 package com.uade.elrincondelmazo.entity;
 
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,7 +18,7 @@ public class Collection {
     @Column(unique = true, nullable = false)
     private String name;
 
-    @Column (nullable = true)
+    @Column(nullable = true)
     private String description;
 
 }

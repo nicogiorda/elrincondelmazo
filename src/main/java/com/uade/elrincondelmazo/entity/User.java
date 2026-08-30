@@ -24,7 +24,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "users") // Especifico el nombre de la tabla en la base de datos, lo recomienda supabase para evitar problemas con palabras reservadas
+@Table(name = "users") // Especifico el nombre de la tabla en la base de datos, lo recomienda supabase
+                       // para evitar problemas con palabras reservadas
 @Data
 @Builder
 @NoArgsConstructor
@@ -35,11 +36,10 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column (unique = true, nullable = false)
+    @Column(unique = true, nullable = false)
     private String email;
 
-
-    @Column (name = "password_hash", nullable = false)
+    @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
     @Column(nullable = false)
@@ -78,21 +78,20 @@ public class User implements UserDetails {
         return active;
     }
 
-	@Override
-	public String getPassword() {
-		return passwordHash;
-	}
+    @Override
+    public String getPassword() {
+        return passwordHash;
+    }
 
-	@Override
-	public String getUsername() {
-		return email;
-	}
+    @Override
+    public String getUsername() {
+        return email;
+    }
 
-	@Override
-	public Collection<? extends GrantedAuthority> getAuthorities() {
-		return List.of(
-		    new SimpleGrantedAuthority(role.name()))
-		;
-	}
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(
+                new SimpleGrantedAuthority(role.name()));
+    }
 
 }
