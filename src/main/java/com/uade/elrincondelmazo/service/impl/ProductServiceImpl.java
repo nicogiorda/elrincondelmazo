@@ -132,8 +132,8 @@ public class ProductServiceImpl implements ProductService {
                                         "El precio minimo no puede ser mayor al precio maximo");
                 }
 
-                if (search != null && search.isBlank()) {
-                        search = null;
+                if (search == null || search.isBlank()) {
+                        search = "";
                 }
 
                 return productRepository.findProducts(
