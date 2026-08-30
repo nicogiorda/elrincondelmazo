@@ -1,15 +1,22 @@
 package com.uade.elrincondelmazo.entity;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import com.uade.elrincondelmazo.enums.PaymentMethod;
 import com.uade.elrincondelmazo.enums.ProductType;
 import com.uade.elrincondelmazo.enums.PromotionType;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.Data;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-
 
 @Entity
 @Data
@@ -56,9 +63,9 @@ public class Promotion {
     private Boolean active;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    ///No usamos referencedColumn = Id porque ya apunta al ID de collecion,
-    ///hibernate asume automaticamente que se esta referenciando a la clave primaria de esa entidad por lo que seria redundante
+    /// No usamos referencedColumn = Id porque ya apunta al ID de collecion,
+    /// hibernate asume automaticamente que se esta referenciando a la clave
+    /// primaria de esa entidad por lo que seria redundante
     @JoinColumn(name = "coleccion_id")
     private Collection collection;
 }
-

@@ -58,7 +58,7 @@ public class Product {
     private LocalDateTime created_at;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn (name = "seller_id", nullable = false)
+    @JoinColumn(name = "seller_id", nullable = false)
     private User seller;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

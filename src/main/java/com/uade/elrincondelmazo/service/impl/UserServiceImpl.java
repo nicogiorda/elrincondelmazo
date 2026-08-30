@@ -6,27 +6,31 @@ import org.springframework.stereotype.Service;
 import com.uade.elrincondelmazo.entity.User;
 import com.uade.elrincondelmazo.entity.dto.UpdateUserRequest;
 import com.uade.elrincondelmazo.exception.UserNotFoundException;
-import com.uade.elrincondelmazo.service.UserService;
 import com.uade.elrincondelmazo.repository.UserRepository;
+import com.uade.elrincondelmazo.service.UserService;
 
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Autowired 
+    @Autowired
     private UserRepository userRepository;
 
-    /*public UserServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }*/
+    /*
+     * public UserServiceImpl(UserRepository userRepository) {
+     * this.userRepository = userRepository;
+     * }
+     */
 
     @Override
     public User getById(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
     }
 
     @Override
-    public User getByEmail(String email){
-        return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+    public User getByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
     }
 
     @Override
@@ -39,7 +43,7 @@ public class UserServiceImpl implements UserService {
         user.setLastName(request.getLastName());
 
         return userRepository.save(user);
-        
+
     }
 
     @Override
@@ -48,5 +52,4 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(user);
     }
 
-    
 }

@@ -7,5 +7,5 @@ import com.uade.elrincondelmazo.entity.OrderPromotion;
 
 @Repository
 public interface OrderPromotionRepository extends JpaRepository<OrderPromotion, Long> {
-    
+
 }

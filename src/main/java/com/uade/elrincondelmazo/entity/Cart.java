@@ -1,11 +1,16 @@
 package com.uade.elrincondelmazo.entity;
 
-
-import jakarta.persistence.*;
-import lombok.Data;
-
 import java.time.LocalDateTime;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import lombok.Data;
 
 @Entity
 @Data
@@ -16,9 +21,9 @@ public class Cart {
     private Long id;
 
     /**
-    - Relacion obligatoria porque no deberia existir un carrito sin User
-    - Relacion OneToOne porque un User solo puede tener un carrito
-    - unique = true para que un User no pueda tener mas de un carrito
+     * - Relacion obligatoria porque no deberia existir un carrito sin User
+     * - Relacion OneToOne porque un User solo puede tener un carrito
+     * - unique = true para que un User no pueda tener mas de un carrito
      */
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
