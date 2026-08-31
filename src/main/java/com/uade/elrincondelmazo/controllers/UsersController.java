@@ -2,14 +2,19 @@ package com.uade.elrincondelmazo.controllers;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+
 import com.uade.elrincondelmazo.entity.User;
 import com.uade.elrincondelmazo.entity.dto.UpdateUserRequest;
 import com.uade.elrincondelmazo.entity.dto.UserResponse;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.uade.elrincondelmazo.service.ProductService;
 import com.uade.elrincondelmazo.service.UserService;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,6 +33,7 @@ public class UsersController {
     @Autowired
     private UserService userService;
 
+    /*
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getById(@PathVariable Long id) {
 
@@ -38,6 +44,17 @@ public class UsersController {
 
     @GetMapping("/email/{email}")
     public ResponseEntity<UserResponse> getByEmail(@PathVariable String email) {
+        User user = userService.getByEmail(email);
+
+        return ResponseEntity.ok(toResponse(user));
+    }
+    */
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getMyUser(Authentication authentication) {
+
+        String email = authentication.getName();
+
         User user = userService.getByEmail(email);
 
         return ResponseEntity.ok(toResponse(user));
