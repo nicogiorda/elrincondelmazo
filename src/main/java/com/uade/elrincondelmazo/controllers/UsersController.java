@@ -17,7 +17,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-
+import org.springframework.security.core.Authentication;
+//Usamos el authentication para obtener el email del usuario logueado y asi poder actualizar o eliminar su cuenta.
 
 
 @RestController
@@ -42,18 +43,23 @@ public class UsersController {
         return ResponseEntity.ok(toResponse(user));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @RequestBody UpdateUserRequest request) {
+    @PutMapping("/me")
+    public ResponseEntity<UserResponse> updateUser(Authentication authentication, @RequestBody UpdateUserRequest request) {
 
-        User updateUser = userService.updateUser(id, request);
+        String email = authentication.getName();
+
+        User updateUser = userService.updateUser(email, request);
 
         return ResponseEntity.ok(toResponse(updateUser));
 
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteUser(Authentication authentication) {
+
+        String email = authentication.getName();
+
+        userService.deleteUser(email);
 
         return ResponseEntity.noContent().build();
     }

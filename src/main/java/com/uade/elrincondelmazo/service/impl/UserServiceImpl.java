@@ -34,21 +34,29 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUser(Long id, UpdateUserRequest request) {
+    public User updateUser(String email, UpdateUserRequest request) {
 
-        User user = getById(id);
+        User user = getByEmail(email);
+
+        if (!user.getEmail().equals(request.getEmail())
+                && userRepository.existsByEmail(request.getEmail())) {
+
+            throw new IllegalArgumentException(
+                    "El email ya está registrado por otro usuario");
+        }
 
         user.setEmail(request.getEmail());
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
 
         return userRepository.save(user);
-
     }
 
     @Override
-    public void deleteUser(Long id) {
-        User user = getById(id);
+    public void deleteUser(String email) {
+
+        User user = getByEmail(email);
+
         userRepository.delete(user);
     }
 
