@@ -9,7 +9,7 @@ public interface UserService {
 
     User getByEmail(String email);
 
-    User updateUser(Long id, UpdateUserRequest request);
+    User updateUser(String email, UpdateUserRequest request);
 
-    void deleteUser(Long id);
+    void deleteUser(String email);
 }
