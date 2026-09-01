@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import com.uade.elrincondelmazo.entity.User;
 import com.uade.elrincondelmazo.entity.dto.UpdateUserRequest;
+import com.uade.elrincondelmazo.exception.EmailAlreadyExistsException;
 import com.uade.elrincondelmazo.exception.UserNotFoundException;
 import com.uade.elrincondelmazo.repository.UserRepository;
 import com.uade.elrincondelmazo.service.UserService;
@@ -45,7 +46,7 @@ public class UserServiceImpl implements UserService {
         if (!user.getEmail().equals(newEmail)
                 && userRepository.existsByEmail(newEmail)) {
 
-            throw new IllegalArgumentException(
+            throw new EmailAlreadyExistsException(
                     "El email ya está registrado por otro usuario");
         }
 
