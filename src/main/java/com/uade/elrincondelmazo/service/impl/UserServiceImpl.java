@@ -62,7 +62,9 @@ public class UserServiceImpl implements UserService {
 
         User user = getByEmail(email);
 
-        userRepository.delete(user);
+        user.setActive(false);
+
+        userRepository.save(user);
     }
 
 }
