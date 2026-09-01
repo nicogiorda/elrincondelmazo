@@ -38,14 +38,18 @@ public class UserServiceImpl implements UserService {
 
         User user = getByEmail(email);
 
-        if (!user.getEmail().equals(request.getEmail())
-                && userRepository.existsByEmail(request.getEmail())) {
+        String newEmail = request.getEmail()
+                .trim()
+                .toLowerCase();
+
+        if (!user.getEmail().equals(newEmail)
+                && userRepository.existsByEmail(newEmail)) {
 
             throw new IllegalArgumentException(
                     "El email ya está registrado por otro usuario");
         }
 
-        user.setEmail(request.getEmail());
+        user.setEmail(newEmail);
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
 

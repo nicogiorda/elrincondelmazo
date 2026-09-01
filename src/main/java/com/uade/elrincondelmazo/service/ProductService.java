@@ -34,4 +34,8 @@ public interface ProductService {
                         Long userId,
                         Long id);
 
+        Page<Product> getProductsBySeller(
+                        Long sellerId,
+                        PageRequest pageRequest);
+
 }

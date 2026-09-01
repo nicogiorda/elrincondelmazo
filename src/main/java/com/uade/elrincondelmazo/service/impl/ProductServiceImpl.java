@@ -154,17 +154,17 @@ public class ProductServiceImpl implements ProductService {
 
         @Override
         public Page<Product> getProductsBySeller(
-                Long sellerId,
-                PageRequest pageRequest) {
+                        Long sellerId,
+                        PageRequest pageRequest) {
 
                 userRepository.findById(sellerId)
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "Usuario no encontrado con id: " + sellerId));
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Usuario no encontrado con id: " + sellerId));
 
                 return productRepository.findBySellerId(
-                        sellerId,
-                        pageRequest);
-}
+                                sellerId,
+                                pageRequest);
+        }
 
         @Override
         public Product updateProduct(
