@@ -9,3 +9,4 @@ import com.uade.elrincondelmazo.entity.OrderPromotion;
 public interface OrderPromotionRepository extends JpaRepository<OrderPromotion, Long> {
 
 }
+
