@@ -24,23 +24,6 @@ public class UsersController {
     @Autowired
     private UserService userService;
 
-    /*
-     * @GetMapping("/{id}")
-     * public ResponseEntity<UserResponse> getById(@PathVariable Long id) {
-     * 
-     * User user = userService.getById(id);
-     * 
-     * return ResponseEntity.ok(toResponse(user));
-     * }
-     * 
-     * @GetMapping("/email/{email}")
-     * public ResponseEntity<UserResponse> getByEmail(@PathVariable String email) {
-     * User user = userService.getByEmail(email);
-     * 
-     * return ResponseEntity.ok(toResponse(user));
-     * }
-     */
-
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getMyUser(Authentication authentication) {
 

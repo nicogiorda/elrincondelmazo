@@ -34,7 +34,9 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 HttpMethod.GET,
                                                                 "/products",
-                                                                "/products/**")
+                                                                "/products/**",
+                                                                "/collections",
+                                                                "/collections/**")
                                                 .permitAll()
                                                 
                                                 // Solo ADMIN puede crear promociones
