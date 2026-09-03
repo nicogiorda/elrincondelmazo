@@ -8,7 +8,7 @@ import com.uade.elrincondelmazo.exception.InvalidCartException;
 import com.uade.elrincondelmazo.exception.ResourceNotFoundException;
 import com.uade.elrincondelmazo.repository.*;
 import com.uade.elrincondelmazo.service.PromotionService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -241,8 +241,7 @@ public class OrderServiceImpl implements OrderService {
 
 
     @Override
-    ///Corregir estre import, ahora lo soluciono asi porque me da error el transactinoal de spring
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public OrderResponse getOrderById(
             Long userId,
             Long orderId) {
