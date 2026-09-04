@@ -50,6 +50,7 @@ public class UsersController {
     }
     */
 
+    /* */
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getMyUser(Authentication authentication) {
 

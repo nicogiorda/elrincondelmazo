@@ -37,6 +37,15 @@ public class SecurityConfig {
                                                                 "/products/**")
                                                 .permitAll()
 
+                                                .requestMatchers(HttpMethod.POST, "/collections/**")
+                                                .hasAuthority("ADMIN")
+
+                                                .requestMatchers(HttpMethod.PUT, "/collections/**")
+                                                .hasAuthority("ADMIN")
+
+                                                .requestMatchers(HttpMethod.DELETE, "/collections/**")
+                                                .hasAuthority("ADMIN")
+
                                                 .anyRequest().authenticated())
 
                                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
@@ -45,7 +54,11 @@ public class SecurityConfig {
                                                 .authenticationEntryPoint((request, response, authException) -> response
                                                                 .sendError(
                                                                                 HttpServletResponse.SC_UNAUTHORIZED,
-                                                                                "Unauthorized")))
+                                                                                "Unauthorized")) //401 Unauthorized
+                                                .accessDeniedHandler((request, response, accessDeniedException) -> response
+                                                                .sendError(
+                                                                                HttpServletResponse.SC_FORBIDDEN,
+                                                                                "Forbidden"))) //403 Forbidden
 
                                 .authenticationProvider(authenticationProvider)
 
@@ -56,4 +69,3 @@ public class SecurityConfig {
                 return http.build();
         }
 }
-

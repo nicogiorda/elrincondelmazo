@@ -164,7 +164,7 @@ public class ProductServiceImpl implements ProductService {
                 return productRepository.findBySellerId(
                         sellerId,
                         pageRequest);
-}
+        }
 
         @Override
         public Product updateProduct(

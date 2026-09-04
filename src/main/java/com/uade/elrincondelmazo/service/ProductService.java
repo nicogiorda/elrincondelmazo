@@ -21,6 +21,10 @@ public interface ProductService {
 
         Product getProductById(Long id);
 
+        Page<Product> getProductsBySeller(
+                Long sellerId,
+                PageRequest pageRequest);
+
         Product createProduct(
                         Long userId,
                         ProductRequest productRequest);
