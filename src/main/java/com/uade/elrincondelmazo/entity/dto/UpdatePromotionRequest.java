@@ -38,6 +38,9 @@ public class UpdatePromotionRequest {
     @Positive
     private Long collectionId;
 
+    @Positive
+    private Long productId;
+
     @NotNull
     private Boolean stackable;
 

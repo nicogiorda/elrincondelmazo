@@ -29,6 +29,9 @@ public class PromotionResponse {
     private Long collectionId;
     private String collectionName;
 
+    private Long productId;
+    private String productName;
+
     private boolean stackable;
 
     private LocalDateTime startDate;

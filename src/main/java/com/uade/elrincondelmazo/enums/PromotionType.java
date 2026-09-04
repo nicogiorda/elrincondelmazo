@@ -5,5 +5,6 @@ public enum PromotionType {
     COLECCION,
     TIPO_PRODUCTO,
     METODO_PAGO,
-    MONTO_MINIMO
+    MONTO_MINIMO,
+    PRODUCTO
 }
