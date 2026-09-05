@@ -9,6 +9,7 @@ import com.uade.elrincondelmazo.exception.EmailAlreadyExistsException;
 import com.uade.elrincondelmazo.exception.UserNotFoundException;
 import com.uade.elrincondelmazo.repository.UserRepository;
 import com.uade.elrincondelmazo.service.UserService;
+import com.uade.elrincondelmazo.enums.Role;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -67,4 +68,13 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    @Override
+    public User promoteToAdmin(Long id) {
+
+        User user = getById(id);
+
+        user.setRole(Role.ADMIN);
+
+        return userRepository.save(user);
+    }
 }
