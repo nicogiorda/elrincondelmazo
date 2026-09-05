@@ -6,10 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.uade.elrincondelmazo.entity.Collection;
+import com.uade.elrincondelmazo.entity.dto.CollectionRequest;
+import com.uade.elrincondelmazo.exception.ResourceNotFoundException;
 import com.uade.elrincondelmazo.repository.CollectionRepository;
 import com.uade.elrincondelmazo.service.CollectionService;
-import com.uade.elrincondelmazo.entity.dto.CollectionRequest;
-
 
 @Service
 public class CollectionServiceImpl implements CollectionService {
@@ -24,9 +24,8 @@ public class CollectionServiceImpl implements CollectionService {
     @Override
     public Collection getCollectionById(Long id) {
         return collectionRepository.findById(id)
-            .orElseThrow(() ->
-                    new RuntimeException(
-                        "Colleción no encontrada con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Colección no encontrada con id: " + id));
     }
 
     @Override
