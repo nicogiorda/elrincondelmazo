@@ -38,7 +38,7 @@ public class SecurityConfig {
                                                                 "/collections",
                                                                 "/collections/**")
                                                 .permitAll()
-                                                
+
                                                 // Solo ADMIN puede crear promociones
                                                 .requestMatchers(
                                                         HttpMethod.POST,
@@ -64,6 +64,9 @@ public class SecurityConfig {
                                                 .hasAuthority("ADMIN")
 
                                                 .requestMatchers(HttpMethod.DELETE, "/collections/**")
+                                                .hasAuthority("ADMIN")
+
+                                                .requestMatchers(HttpMethod.PATCH, "/users/promote/*")
                                                 .hasAuthority("ADMIN")
 
                                                 .anyRequest().authenticated())
