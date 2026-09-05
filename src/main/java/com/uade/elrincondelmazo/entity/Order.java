@@ -26,30 +26,31 @@ public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
+    private Long id;
 
+    //No usamos referenced column id porque al no especificar una columna, hibernate referencia automaticamente a la primary key de User
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column
+    @Column(name = "order_date", nullable = false)
     private LocalDateTime orderDate;
 
     @Enumerated(EnumType.STRING)
-    @Column
+    @Column(nullable = false)
     private StateOrder state;
 
     @Enumerated(EnumType.STRING)
-    @Column
+    @Column(nullable = false)
     private PaymentMethod paymentMethod;
 
     @Column
     private BigDecimal subtotal;
 
-    @Column
-    private BigDecimal descuentoTotal;
+    @Column(name = "total_discount", nullable = false)
+    private BigDecimal totalDiscount;
 
-    @Column
+    @Column(nullable = false)
     private BigDecimal total;
 
 }

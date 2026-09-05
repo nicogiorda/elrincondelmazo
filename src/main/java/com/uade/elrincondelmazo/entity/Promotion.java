@@ -7,15 +7,7 @@ import com.uade.elrincondelmazo.enums.PaymentMethod;
 import com.uade.elrincondelmazo.enums.ProductType;
 import com.uade.elrincondelmazo.enums.PromotionType;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
@@ -23,7 +15,7 @@ import lombok.Data;
 public class Promotion {
 
     @Id
-    @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
@@ -36,36 +28,40 @@ public class Promotion {
     @Column(nullable = false)
     private PromotionType type;
 
-    @Column(nullable = false)
-    private Double discountPercentage;
+    @Column(name = "discount_percentage", nullable = false)
+    private BigDecimal discountPercentage;
 
-    @Column
+    @Column(name = "minimum_quantity")
+    private Integer minimumQuantity;
+
+    @Column(name = "minimum_amount")
     private BigDecimal minimumAmount;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "product_type", nullable = false)
+    @Column(name = "product_type")
     private ProductType productType;
 
     @Enumerated(EnumType.STRING)
-    @Column
+    @Column(name = "payment_method")
     private PaymentMethod paymentMethod;
 
-    @Column(nullable = false)
-    private Boolean stackable;
-
-    @Column(nullable = false)
-    private LocalDateTime startDate;
-
-    @Column
-    private LocalDateTime endDate;
-
-    @Column
-    private Boolean active;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "collection_id")
+    private Collection collection;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    /// No usamos referencedColumn = Id porque ya apunta al ID de collecion,
-    /// hibernate asume automaticamente que se esta referenciando a la clave
-    /// primaria de esa entidad por lo que seria redundante
-    @JoinColumn(name = "coleccion_id")
-    private Collection collection;
+    @JoinColumn(name = "product_id")
+    private Product product;
+
+    @Column(nullable = false)
+    private boolean stackable;
+
+    @Column(name = "start_date", nullable = false)
+    private LocalDateTime startDate;
+
+    @Column(name = "end_date")
+    private LocalDateTime endDate;
+
+    @Column(nullable = false)
+    private boolean active;
 }

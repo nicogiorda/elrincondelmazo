@@ -145,6 +145,11 @@ public class CartServiceImpl implements CartService {
                                         "El item no pertenece al carrito del usuario");
                 }
 
+                if (item.getProduct().getStatus() != ProductStatus.ACTIVO) {
+                        throw new InvalidCartException(
+                                        "El producto no está disponible");
+                }
+
                 if (request.getQuantity() > item.getProduct().getStock()) {
                         throw new InvalidCartException(
                                         "Stock insuficiente");

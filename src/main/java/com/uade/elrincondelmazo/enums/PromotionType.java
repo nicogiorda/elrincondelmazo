@@ -1,7 +1,10 @@
 package com.uade.elrincondelmazo.enums;
 
 public enum PromotionType {
-    PORCENTAJE,
-    MONTO_FIJO,
-    CANTIDAD
+    CANTIDAD,
+    COLECCION,
+    TIPO_PRODUCTO,
+    METODO_PAGO,
+    MONTO_MINIMO,
+    PRODUCTO
 }

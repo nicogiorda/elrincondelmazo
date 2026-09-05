@@ -3,10 +3,11 @@ package com.uade.elrincondelmazo.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.NOT_FOUND)
-public class UserNotFoundException extends RuntimeException {
+@ResponseStatus(HttpStatus.FORBIDDEN)
+public class ReviewNotAllowedException
+        extends RuntimeException {
 
-    public UserNotFoundException(String message) {
+    public ReviewNotAllowedException(String message) {
         super(message);
     }
 }

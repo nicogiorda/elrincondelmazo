@@ -34,8 +34,28 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 HttpMethod.GET,
                                                                 "/products",
-                                                                "/products/**")
+                                                                "/products/**",
+                                                                "/collections",
+                                                                "/collections/**")
                                                 .permitAll()
+                                                
+                                                // Solo ADMIN puede crear promociones
+                                                .requestMatchers(
+                                                        HttpMethod.POST,
+                                                        "/promotions")
+                                                .hasAuthority("ADMIN")
+
+                                                // Solo ADMIN puede modificar promociones
+                                                .requestMatchers(
+                                                        HttpMethod.PUT,
+                                                        "/promotions/**")
+                                                .hasAuthority("ADMIN")
+
+                                                // Solo ADMIN puede activar/desactivar promociones
+                                                .requestMatchers(
+                                                        HttpMethod.PATCH,
+                                                        "/promotions/**")
+                                                .hasAuthority("ADMIN")
 
                                                 .requestMatchers(HttpMethod.POST, "/collections/**")
                                                 .hasAuthority("ADMIN")

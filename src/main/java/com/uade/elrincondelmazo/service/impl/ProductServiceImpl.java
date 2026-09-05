@@ -142,28 +142,37 @@ public class ProductServiceImpl implements ProductService {
                                 collectionId,
                                 minPrice,
                                 maxPrice,
+                                ProductStatus.ELIMINADO,
                                 pageRequest);
         }
 
         @Override
         public Product getProductById(Long id) {
-                return productRepository.findById(id)
+
+                Product product = productRepository.findById(id)
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Producto no encontrado con id: " + id));
+
+                if (product.getStatus() == ProductStatus.ELIMINADO) {
+                        throw new ResourceNotFoundException(
+                                        "Producto no encontrado con id: " + id);
+                }
+
+                return product;
         }
 
         @Override
         public Page<Product> getProductsBySeller(
-                Long sellerId,
-                PageRequest pageRequest) {
+                        Long sellerId,
+                        PageRequest pageRequest) {
 
                 userRepository.findById(sellerId)
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "Usuario no encontrado con id: " + sellerId));
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Usuario no encontrado con id: " + sellerId));
 
                 return productRepository.findBySellerId(
-                        sellerId,
-                        pageRequest);
+                                sellerId,
+                                pageRequest);
         }
 
         @Override
@@ -208,7 +217,8 @@ public class ProductServiceImpl implements ProductService {
 
                 validateOwnerOrAdmin(product, userId);
 
-                productRepository.delete(product);
+                product.setStatus(ProductStatus.ELIMINADO);
+                productRepository.save(product);
         }
 
         private void validateOwnerOrAdmin(

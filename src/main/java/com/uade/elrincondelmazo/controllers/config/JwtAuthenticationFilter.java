@@ -8,6 +8,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -27,18 +28,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     // En esta version de Spring, los @NonNull no son necesarios.
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
             FilterChain filterChain)
             throws ServletException, IOException {
+
         final String authHeader = request.getHeader("Authorization");
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         try{
-            String jwt = authHeader.substring(7);
-            String userEmail = jwtService.extractEmail(jwt);
+            final String jwt = authHeader.substring(7);
+            final String userEmail = jwtService.extractEmail(jwt);
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null){
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
@@ -48,6 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             userDetails,
                             null,
                             userDetails.getAuthorities());
+
                     authToken.setDetails(
                             new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
@@ -56,9 +62,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             } catch (JwtException | IllegalArgumentException e) {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token inválido o expirado");
                 return;
+
+            } catch (UsernameNotFoundException e) {
+                // El usuario del token ya no existe con ese email.
+                // Por ejemplo, porque cambió su email.
+                // No lo autenticamos y la request seguirá sin Authentication.
             }
 
-            filterChain.doFilter(request, response);
-
+        filterChain.doFilter(request, response);
     }
 }

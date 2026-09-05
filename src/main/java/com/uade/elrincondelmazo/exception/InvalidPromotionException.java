@@ -3,10 +3,10 @@ package com.uade.elrincondelmazo.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.NOT_FOUND)
-public class UserNotFoundException extends RuntimeException {
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+public class InvalidPromotionException extends RuntimeException {
 
-    public UserNotFoundException(String message) {
+    public InvalidPromotionException(String message) {
         super(message);
     }
 }

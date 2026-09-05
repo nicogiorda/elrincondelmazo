@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import com.uade.elrincondelmazo.entity.User;
 import com.uade.elrincondelmazo.entity.dto.UpdateUserRequest;
+import com.uade.elrincondelmazo.exception.EmailAlreadyExistsException;
 import com.uade.elrincondelmazo.exception.UserNotFoundException;
 import com.uade.elrincondelmazo.repository.UserRepository;
 import com.uade.elrincondelmazo.service.UserService;
@@ -38,16 +39,20 @@ public class UserServiceImpl implements UserService {
 
         User user = getByEmail(email);
 
-        if (!user.getEmail().equals(request.getEmail())
-                && userRepository.existsByEmail(request.getEmail())) {
+        String newEmail = request.getEmail()
+                .trim()
+                .toLowerCase();
 
-            throw new IllegalArgumentException(
+        if (!user.getEmail().equals(newEmail)
+                && userRepository.existsByEmail(newEmail)) {
+
+            throw new EmailAlreadyExistsException(
                     "El email ya está registrado por otro usuario");
         }
 
-        user.setEmail(request.getEmail());
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
+        user.setEmail(newEmail);
+        user.setFirstName(request.getFirstName().trim());
+        user.setLastName(request.getLastName().trim());
 
         return userRepository.save(user);
     }
@@ -57,7 +62,9 @@ public class UserServiceImpl implements UserService {
 
         User user = getByEmail(email);
 
-        userRepository.delete(user);
+        user.setActive(false);
+
+        userRepository.save(user);
     }
 
 }

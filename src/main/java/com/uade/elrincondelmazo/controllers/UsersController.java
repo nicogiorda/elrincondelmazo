@@ -1,30 +1,21 @@
 package com.uade.elrincondelmazo.controllers;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 import com.uade.elrincondelmazo.entity.User;
 import com.uade.elrincondelmazo.entity.dto.UpdateUserRequest;
 import com.uade.elrincondelmazo.entity.dto.UserResponse;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.uade.elrincondelmazo.service.ProductService;
 import com.uade.elrincondelmazo.service.UserService;
-
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.security.core.Authentication;
 //Usamos el authentication para obtener el email del usuario logueado y asi poder actualizar o eliminar su cuenta.
-
 
 @RestController
 @RequestMapping("/users")
@@ -33,24 +24,6 @@ public class UsersController {
     @Autowired
     private UserService userService;
 
-    /*
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getById(@PathVariable Long id) {
-
-        User user = userService.getById(id);
-
-        return ResponseEntity.ok(toResponse(user));
-    }
-
-    @GetMapping("/email/{email}")
-    public ResponseEntity<UserResponse> getByEmail(@PathVariable String email) {
-        User user = userService.getByEmail(email);
-
-        return ResponseEntity.ok(toResponse(user));
-    }
-    */
-
-    /* */
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getMyUser(Authentication authentication) {
 
@@ -62,7 +35,8 @@ public class UsersController {
     }
 
     @PutMapping("/me")
-    public ResponseEntity<UserResponse> updateUser(Authentication authentication, @RequestBody UpdateUserRequest request) {
+    public ResponseEntity<UserResponse> updateUser(Authentication authentication,
+            @Valid @RequestBody UpdateUserRequest request) {
 
         String email = authentication.getName();
 
@@ -93,6 +67,5 @@ public class UsersController {
 
         return response;
     }
-
 
 }
