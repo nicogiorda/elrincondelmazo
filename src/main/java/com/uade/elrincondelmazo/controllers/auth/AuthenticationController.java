@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.uade.elrincondelmazo.service.AuthenticationService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -19,13 +20,17 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> register(
-            @RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(service.register(request));
+            @Valid @RequestBody RegisterRequest request) {
+
+        return ResponseEntity.ok(
+                service.register(request));
     }
 
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticationResponse> authenticate(
-            @RequestBody AuthenticationRequest request) {
-        return ResponseEntity.ok(service.authenticate(request));
+            @Valid @RequestBody AuthenticationRequest request) {
+
+        return ResponseEntity.ok(
+                service.authenticate(request));
     }
 }
