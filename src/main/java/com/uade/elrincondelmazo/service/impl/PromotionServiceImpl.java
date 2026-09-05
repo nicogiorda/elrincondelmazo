@@ -7,9 +7,11 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import com.uade.elrincondelmazo.entity.CartItem;
 import com.uade.elrincondelmazo.entity.Collection;
 import com.uade.elrincondelmazo.entity.Product;
@@ -20,12 +22,14 @@ import com.uade.elrincondelmazo.entity.dto.PromotionApplicationResponse;
 import com.uade.elrincondelmazo.entity.dto.PromotionResponse;
 import com.uade.elrincondelmazo.entity.dto.UpdatePromotionRequest;
 import com.uade.elrincondelmazo.enums.PaymentMethod;
+import com.uade.elrincondelmazo.enums.ProductType;
+import com.uade.elrincondelmazo.enums.PromotionType;
 import com.uade.elrincondelmazo.exception.InvalidPromotionException;
 import com.uade.elrincondelmazo.exception.ResourceNotFoundException;
 import com.uade.elrincondelmazo.repository.CollectionRepository;
+import com.uade.elrincondelmazo.repository.ProductRepository;
 import com.uade.elrincondelmazo.repository.PromotionRepository;
 import com.uade.elrincondelmazo.service.PromotionService;
-import com.uade.elrincondelmazo.repository.ProductRepository;
 
 @Service
 public class PromotionServiceImpl implements PromotionService {
@@ -69,6 +73,14 @@ public class PromotionServiceImpl implements PromotionService {
                 validateDates(
                                 request.getStartDate(),
                                 request.getEndDate());
+                validateRequiredFields(
+                                request.getType(),
+                                request.getMinimumQuantity(),
+                                request.getMinimumAmount(),
+                                request.getProductType(),
+                                request.getPaymentMethod(),
+                                request.getCollectionId(),
+                                request.getProductId());
 
                 Promotion promotion = new Promotion();
 
@@ -130,6 +142,14 @@ public class PromotionServiceImpl implements PromotionService {
                 validateDates(
                                 request.getStartDate(),
                                 request.getEndDate());
+                validateRequiredFields(
+                                request.getType(),
+                                request.getMinimumQuantity(),
+                                request.getMinimumAmount(),
+                                request.getProductType(),
+                                request.getPaymentMethod(),
+                                request.getCollectionId(),
+                                request.getProductId());
 
                 promotion.setName(
                                 request.getName());
@@ -265,7 +285,8 @@ public class PromotionServiceImpl implements PromotionService {
 
                 return applyStackableRules(
                                 applicablePromotions,
-                                promotions);
+                                promotions,
+                                subtotal);
         }
 
         // ==========================================
@@ -502,8 +523,8 @@ public class PromotionServiceImpl implements PromotionService {
         // ==========================================
 
         private PromotionApplicationResponse applyStackableRules(
-                        List<AppliedPromotionResponse> applicablePromotions,
-                        List<Promotion> promotions) {
+                List<AppliedPromotionResponse> applicablePromotions,
+                List<Promotion> promotions,BigDecimal subtotal) {
 
                 if (applicablePromotions.isEmpty()) {
 
@@ -526,17 +547,39 @@ public class PromotionServiceImpl implements PromotionService {
 
                 if (nonStackablePromotions.isEmpty()) {
 
-                        BigDecimal totalDiscount = stackablePromotions.stream()
-                                        .map(
-                                                        AppliedPromotionResponse::getDiscountApplied)
-                                        .reduce(
-                                                        BigDecimal.ZERO,
-                                                        BigDecimal::add);
+                         List<AppliedPromotionResponse> appliedWithinSubtotal =
+                                 new ArrayList<>();
+
+                        BigDecimal remainingDiscount = subtotal;
+
+                        for (AppliedPromotionResponse applied : stackablePromotions) {
+
+                                if (remainingDiscount.compareTo(BigDecimal.ZERO) <= 0) {
+                                        break;
+        }
+
+                                BigDecimal discountToApply =
+                                        applied.getDiscountApplied()
+                                                .min(remainingDiscount);
+
+
+                                appliedWithinSubtotal.add(
+                                        new AppliedPromotionResponse(
+                                        applied.getPromotionId(),
+                                        applied.getPromotionName(),
+                                        discountToApply));
+
+                                remainingDiscount =
+                                        remainingDiscount.subtract(discountToApply);
+    }
+
+                        BigDecimal totalDiscount =
+                                subtotal.subtract(remainingDiscount);
 
                         return new PromotionApplicationResponse(
-                                        totalDiscount,
-                                        stackablePromotions);
-                }
+                                totalDiscount,
+                                appliedWithinSubtotal);
+}
 
                 AppliedPromotionResponse bestNonStackable = nonStackablePromotions.stream()
                                 .max(
@@ -614,6 +657,61 @@ public class PromotionServiceImpl implements PromotionService {
                                         "La fecha de fin no puede ser anterior a la fecha de inicio");
                 }
         }
+
+        private void validateRequiredFields(
+                 PromotionType type,
+                Integer minimumQuantity,
+                BigDecimal minimumAmount,
+                ProductType productType,
+                PaymentMethod paymentMethod,
+                Long collectionId,
+                Long productId) {
+
+         switch (type) {
+
+                case CANTIDAD -> {
+                        if (minimumQuantity == null) {
+                                throw new InvalidPromotionException(
+                                         "La promocion CANTIDAD requiere minimumQuantity");
+            }
+        }
+
+                 case COLECCION -> {
+                        if (collectionId == null) {
+                                throw new InvalidPromotionException(
+                                         "La promocion COLECCION requiere collectionId");
+            }
+        }
+
+                case TIPO_PRODUCTO -> {
+                        if (productType == null) {
+                                throw new InvalidPromotionException(
+                                         "La promocion TIPO_PRODUCTO requiere productType");
+            }
+        }
+
+                case METODO_PAGO -> {
+                        if (paymentMethod == null) {
+                                throw new InvalidPromotionException(
+                                         "La promocion METODO_PAGO requiere paymentMethod");
+            }
+        }
+
+                case MONTO_MINIMO -> {
+                        if (minimumAmount == null) {
+                                throw new InvalidPromotionException(
+                                         "La promocion MONTO_MINIMO requiere minimumAmount");
+            }
+        }
+
+                case PRODUCTO -> {
+                        if (productId == null) {
+                                throw new InvalidPromotionException(
+                                         "La promocion PRODUCTO requiere productId");
+            }
+        }
+    }
+}
 
         private PromotionResponse toResponse(
                         Promotion promotion) {
