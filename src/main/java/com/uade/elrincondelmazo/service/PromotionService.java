@@ -30,8 +30,3 @@ public interface PromotionService {
             List<CartItem> items,
             PaymentMethod paymentMethod);
 }
-
-    
-
-
-
