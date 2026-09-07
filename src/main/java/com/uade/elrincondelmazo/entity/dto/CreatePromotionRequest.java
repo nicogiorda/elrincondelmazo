@@ -39,6 +39,9 @@ public class CreatePromotionRequest {
     @Positive
     private Long collectionId;
 
+    @Positive
+    private Long productId;
+
     @NotNull
     private Boolean stackable;
 

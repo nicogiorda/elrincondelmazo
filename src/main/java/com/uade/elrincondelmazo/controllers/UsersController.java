@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,6 +58,14 @@ public class UsersController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/promote/{id}")
+    public ResponseEntity<UserResponse> promoteToAdmin(@PathVariable Long id) {
+
+        User user = userService.promoteToAdmin(id);
+
+        return ResponseEntity.ok(toResponse(user));
+    }
+
     private UserResponse toResponse(User user) {
 
         UserResponse response = new UserResponse();
@@ -64,6 +74,7 @@ public class UsersController {
         response.setEmail(user.getEmail());
         response.setFirstName(user.getFirstName());
         response.setLastName(user.getLastName());
+        response.setRole(user.getRole());
 
         return response;
     }
