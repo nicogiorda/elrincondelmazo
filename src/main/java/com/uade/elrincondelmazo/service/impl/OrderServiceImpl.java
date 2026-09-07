@@ -56,6 +56,7 @@ public class OrderServiceImpl implements OrderService {
 
     ///Decision importante: Si un usuario no tiene pedidos, se devuelve una lista vacia y no una excepcion
     ///Esto es para evitar manejar "El usuario no registra pedidos" como un error.
+    @Override
     public List<OrderResponse> getOrdersByUserId(Long userId) {
         return orderRepository.findByUserId(userId)
                 .stream()
@@ -66,7 +67,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    /**Esta anotacion le dice a Spring que este metodo debe ejecutarse dentro de una transaccion.
+    /**
+     * Esta anotacion le dice a Spring que este metodo debe ejecutarse dentro de una transaccion.
      * Lo que ocurra dentro de este metodo debe tratarse como una sola unidad de trabajo de base de datos.
      * Basicamente garantiza atomicidad, es decir que: o se completa toda la compra, o no se hace nada.
      */
