@@ -53,14 +53,17 @@ public class CartServiceImpl implements CartService {
         @Override
         public CartResponse addItem(Long userId, AddCartItemRequest request) {
 
+                ///Validamos que el producto exista con ese Id
                 Product product = productRepository.findById(request.getProductId())
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Producto no encontrado con id: " + request.getProductId()));
 
+                ///Validamos que la cantidad sea mayor a cero a pesar del valid que ya tenemos en el request
                 if (request.getQuantity() == null || request.getQuantity() <= 0) {
                         throw new InvalidCartException("La cantidad debe ser mayor a cero");
                 }
 
+                ///Validamos el estado del producto y que no sea del mismo vendedor
                 if (product.getStatus() != ProductStatus.ACTIVO) {
                         throw new InvalidCartException("El producto no está disponible");
                 }
@@ -70,14 +73,18 @@ public class CartServiceImpl implements CartService {
                                         "No se puede agregar al carrito un producto propio");
                 }
 
+                ///Obtenemos el carrito del usuario o lo creamos si no existe
                 Cart cart = getOrCreateCartEntity(userId);
 
+                ///Verificamos si el producto ya está en el carrito
                 CartItem item = cartItemRepository
                                 .findByCart_IdAndProduct_Id(cart.getId(), product.getId())
                                 .orElse(null);
 
+                ///Si el item no existe en el carrito, lo creamos.
                 if (item == null) {
 
+                        ///Antes de crear el item, verificamos que la cantidad solicitada no supere el stock del producto
                         if (request.getQuantity() > product.getStock()) {
                                 throw new InvalidCartException("Stock insuficiente");
                         }
@@ -89,6 +96,7 @@ public class CartServiceImpl implements CartService {
 
                 } else {
 
+                ///Si el item ya existe en el carrito, verificamos que la cantidad solicitada no supere el stock del producto y actualizamos la cantidad del item
                         int newQuantity = item.getQuantity() + request.getQuantity();
 
                         if (newQuantity > product.getStock()) {
