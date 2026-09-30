@@ -3,7 +3,6 @@ package com.uade.elrincondelmazo.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,14 +47,14 @@ public class UsersController {
 
     }
 
-    @DeleteMapping("/me")
-    public ResponseEntity<Void> deleteUser(Authentication authentication) {
+    @PutMapping("/me/deactivate")
+    public ResponseEntity<UserResponse> deactivateUser(Authentication authentication) {
 
         String email = authentication.getName();
 
-        userService.deleteUser(email);
+        User user = userService.deactivateUser(email);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(toResponse(user));
     }
 
     @PatchMapping("/promote/{id}")
