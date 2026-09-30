@@ -10,12 +10,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import jakarta.validation.Valid;
 
 import com.uade.elrincondelmazo.entity.User;
 import com.uade.elrincondelmazo.entity.dto.UpdateUserRequest;
 import com.uade.elrincondelmazo.entity.dto.UserResponse;
 import com.uade.elrincondelmazo.service.UserService;
+
+import jakarta.validation.Valid;
 //Usamos el authentication para obtener el email del usuario logueado y asi poder actualizar o eliminar su cuenta.
 
 @RestController
@@ -74,6 +75,7 @@ public class UsersController {
         response.setFirstName(user.getFirstName());
         response.setLastName(user.getLastName());
         response.setRole(user.getRole());
+        response.setActive(user.getActive());
 
         return response;
     }
