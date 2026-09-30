@@ -11,7 +11,7 @@ public interface UserService {
 
     User updateUser(String email, UpdateUserRequest request);
 
-    void deleteUser(String email);
+    User deactivateUser(String email);
 
     User promoteToAdmin(Long id);
 }

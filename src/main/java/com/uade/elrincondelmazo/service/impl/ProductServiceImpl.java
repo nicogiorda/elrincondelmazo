@@ -209,16 +209,18 @@ public class ProductServiceImpl implements ProductService {
         }
 
         @Override
-        public void deleteProduct(
+        public Product deactivateProduct(
                         Long userId,
                         Long id) {
 
-                Product product = getProductById(id);
+                Product product = productRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Producto no encontrado con id: " + id));
 
                 validateOwnerOrAdmin(product, userId);
 
                 product.setStatus(ProductStatus.ELIMINADO);
-                productRepository.save(product);
+                return productRepository.save(product);
         }
 
         private void validateOwnerOrAdmin(

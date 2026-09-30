@@ -30,7 +30,7 @@ public interface ProductService {
                         Long id,
                         ProductRequest productRequest);
 
-        void deleteProduct(
+        Product deactivateProduct(
                         Long userId,
                         Long id);
 

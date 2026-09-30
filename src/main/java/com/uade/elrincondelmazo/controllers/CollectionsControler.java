@@ -82,11 +82,11 @@ public class CollectionsControler {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCollection(
+    public ResponseEntity<String> deleteCollection(
             @PathVariable Long id
     ) {
         collectionService.deleteCollection(id);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Colección eliminada correctamente");
     }
 }

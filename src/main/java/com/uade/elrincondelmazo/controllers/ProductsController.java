@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -118,16 +117,17 @@ public class ProductsController {
                                 ProductResponse.fromProduct(product));
         }
 
-        @DeleteMapping("/{id}")
-        public ResponseEntity<Void> deleteProduct(
+        @PutMapping("/{id}/deactivate")
+        public ResponseEntity<ProductResponse> deactivateProduct(
                         @AuthenticationPrincipal User user,
                         @PathVariable Long id) {
 
-                productService.deleteProduct(
+                Product product = productService.deactivateProduct(
                                 user.getId(),
                                 id);
 
-                return ResponseEntity.noContent().build();
+                return ResponseEntity.ok(
+                                ProductResponse.fromProduct(product));
         }
 
         @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

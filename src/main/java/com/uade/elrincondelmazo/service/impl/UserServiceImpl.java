@@ -59,13 +59,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUser(String email) {
+    public User deactivateUser(String email) {
 
         User user = getByEmail(email);
 
         user.setActive(false);
 
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
     @Override
