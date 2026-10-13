@@ -191,11 +191,14 @@ public class OrderServiceImpl implements OrderService {
                     orderItemRepository.save(orderItem)
             );
 
+
+            ///Descuenta el stock
             int newStock =
                     product.getStock() - item.getQuantity();
 
             product.setStock(newStock);
 
+            ///Si el stock es cero, se marca el producto como agotado
             if (newStock == 0) {
                 product.setStatus(ProductStatus.AGOTADO);
             }
