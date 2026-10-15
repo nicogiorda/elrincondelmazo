@@ -369,6 +369,8 @@ public class PromotionServiceImpl implements PromotionService {
                 }
 
                 int totalQuantity = items.stream()
+                                .filter(item -> promotion.getProductType() == null
+                                                || item.getProduct().getType() == promotion.getProductType())
                                 .mapToInt(
                                                 CartItem::getQuantity)
                                 .sum();
@@ -378,7 +380,9 @@ public class PromotionServiceImpl implements PromotionService {
                         return BigDecimal.ZERO;
                 }
 
-                return subtotal;
+                return promotion.getProductType() == null
+                                ? subtotal
+                                : getProductTypeDiscountBase(promotion, items);
         }
 
         private BigDecimal getCollectionDiscountBase(
