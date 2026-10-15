@@ -1,6 +1,7 @@
 package com.uade.elrincondelmazo.repository;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +19,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query("""
             SELECT p FROM Product p
-            WHERE p.status <> :excludedStatus
+            WHERE p.status IN :visibleStatuses
             AND (:search IS NULL
                 OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')))
             AND (:type IS NULL OR p.type = :type)
@@ -32,6 +33,16 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("collectionId") Long collectionId,
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,
+            @Param("visibleStatuses") List<ProductStatus> visibleStatuses,
+            Pageable pageable);
+
+    @Query("""
+            SELECT p FROM Product p
+            WHERE p.seller.id = :sellerId AND p.status <> :excludedStatus
+            ORDER BY p.created_at DESC, p.id DESC
+            """)
+    Page<Product> findOwnPublications(
+            @Param("sellerId") Long sellerId,
             @Param("excludedStatus") ProductStatus excludedStatus,
             Pageable pageable);
 

@@ -30,9 +30,15 @@ public interface ProductService {
                         Long id,
                         ProductRequest productRequest);
 
-        Product deactivateProduct(
+        void deleteProduct(
                         Long userId,
                         Long id);
+
+        Page<Product> getOwnPublications(Long userId, PageRequest pageRequest);
+
+        Product pauseProduct(Long userId, Long id);
+
+        Product resumeProduct(Long userId, Long id);
 
         Page<Product> getProductsBySeller(
                         Long sellerId,

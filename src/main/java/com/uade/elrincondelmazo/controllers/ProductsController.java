@@ -11,6 +11,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -74,6 +76,23 @@ public class ProductsController {
                 return ResponseEntity.ok(products);
         }
 
+        /** Todas las publicaciones propias salvo eliminadas, con paginación SQL.
+         * page >= 0; size entre 1 y 200 (20 por defecto). Orden: created_at DESC, id DESC.
+         * El límite es por página, no por historial.
+         */
+        @GetMapping("/mine")
+        public ResponseEntity<Page<ProductResponse>> getOwnPublications(
+                        @AuthenticationPrincipal User user,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "20") int size) {
+                if (page < 0 || size < 1 || size > 200) {
+                        throw new InvalidProductException("La pagina debe ser mayor o igual a cero y el tamaño debe estar entre 1 y 200");
+                }
+                return ResponseEntity.ok(productService
+                                .getOwnPublications(user.getId(), PageRequest.of(page, size))
+                                .map(ProductResponse::fromProduct));
+        }
+
         @GetMapping("/{id}")
         public ResponseEntity<ProductResponse> getProductById(
                         @PathVariable Long id) {
@@ -117,17 +136,35 @@ public class ProductsController {
                                 ProductResponse.fromProduct(product));
         }
 
-        @PutMapping("/{id}/deactivate")
-        public ResponseEntity<ProductResponse> deactivateProduct(
+        /** Eliminación lógica idempotente, compatible con DELETE de main.
+         * Se retira el antiguo PUT /{id}/deactivate: no tiene consumidores en el frontend.
+         */
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> deleteProduct(
                         @AuthenticationPrincipal User user,
                         @PathVariable Long id) {
+                productService.deleteProduct(user.getId(), id);
+                return ResponseEntity.noContent().build();
+        }
 
-                Product product = productService.deactivateProduct(
-                                user.getId(),
-                                id);
+        /** ACTIVO -> INACTIVO; repetir INACTIVO devuelve 200 sin cambios.
+         * AGOTADO devuelve 400; ELIMINADO o inexistente devuelve 404.
+         */
+        @PatchMapping("/{id}/pause")
+        public ResponseEntity<ProductResponse> pauseProduct(
+                        @AuthenticationPrincipal User user,
+                        @PathVariable Long id) {
+                return ResponseEntity.ok(ProductResponse.fromProduct(productService.pauseProduct(user.getId(), id)));
+        }
 
-                return ResponseEntity.ok(
-                                ProductResponse.fromProduct(product));
+        /** INACTIVO -> ACTIVO con stock positivo. ACTIVO con stock: 200 sin cambios.
+         * Sin stock u otro estado no reactivable: 400; ELIMINADO o inexistente: 404.
+         */
+        @PatchMapping("/{id}/resume")
+        public ResponseEntity<ProductResponse> resumeProduct(
+                        @AuthenticationPrincipal User user,
+                        @PathVariable Long id) {
+                return ResponseEntity.ok(ProductResponse.fromProduct(productService.resumeProduct(user.getId(), id)));
         }
 
         @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
