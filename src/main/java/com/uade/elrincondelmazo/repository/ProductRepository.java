@@ -26,6 +26,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             AND (:collectionId IS NULL OR p.collection.id = :collectionId)
             AND (:minPrice IS NULL OR p.price >= :minPrice)
             AND (:maxPrice IS NULL OR p.price <= :maxPrice)
+            ORDER BY p.created_at DESC, p.id DESC
             """)
     Page<Product> findProducts(
             @Param("search") String search,
