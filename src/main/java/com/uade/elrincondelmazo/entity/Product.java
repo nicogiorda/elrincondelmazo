@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.hibernate.annotations.BatchSize;
+
 import com.uade.elrincondelmazo.enums.ProductStatus;
 import com.uade.elrincondelmazo.enums.ProductType;
 
@@ -43,6 +45,7 @@ public class Product {
     private ProductType type;
 
     @ElementCollection
+    @BatchSize(size = 50)
     @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "image_url", nullable = false)
     private List<String> imageUrls;
