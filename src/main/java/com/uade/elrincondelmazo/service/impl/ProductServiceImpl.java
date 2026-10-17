@@ -2,11 +2,13 @@ package com.uade.elrincondelmazo.service.impl;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.uade.elrincondelmazo.entity.Collection;
 import com.uade.elrincondelmazo.entity.Product;
@@ -142,7 +144,7 @@ public class ProductServiceImpl implements ProductService {
                                 collectionId,
                                 minPrice,
                                 maxPrice,
-                                ProductStatus.ELIMINADO,
+                                List.of(ProductStatus.ACTIVO, ProductStatus.AGOTADO),
                                 pageRequest);
         }
 
@@ -209,16 +211,60 @@ public class ProductServiceImpl implements ProductService {
         }
 
         @Override
+        @Transactional
         public void deleteProduct(
                         Long userId,
                         Long id) {
 
-                Product product = getProductById(id);
+                Product product = productRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Producto no encontrado con id: " + id));
 
                 validateOwnerOrAdmin(product, userId);
 
                 product.setStatus(ProductStatus.ELIMINADO);
                 productRepository.save(product);
+        }
+
+        @Override
+        @Transactional(readOnly = true)
+        public Page<Product> getOwnPublications(Long userId, PageRequest pageRequest) {
+                return productRepository.findOwnPublications(userId, ProductStatus.ELIMINADO, pageRequest);
+        }
+
+        /** Pausar dos veces no modifica la publicación; un agotado no puede pausarse. */
+        @Override
+        @Transactional
+        public Product pauseProduct(Long userId, Long id) {
+                Product product = getProductById(id);
+                validateOwnerOrAdmin(product, userId);
+                if (product.getStatus() == ProductStatus.INACTIVO) {
+                        return product;
+                }
+                if (product.getStatus() != ProductStatus.ACTIVO || product.getStock() <= 0) {
+                        throw new InvalidProductException("Solo se puede pausar una publicacion activa con stock disponible");
+                }
+                product.setStatus(ProductStatus.INACTIVO);
+                return productRepository.save(product);
+        }
+
+        /** Reactivar una activa con stock es idempotente; nunca repone stock. */
+        @Override
+        @Transactional
+        public Product resumeProduct(Long userId, Long id) {
+                Product product = getProductById(id);
+                validateOwnerOrAdmin(product, userId);
+                if (product.getStock() <= 0) {
+                        throw new InvalidProductException("No se puede reactivar una publicacion sin stock disponible");
+                }
+                if (product.getStatus() == ProductStatus.ACTIVO) {
+                        return product;
+                }
+                if (product.getStatus() != ProductStatus.INACTIVO) {
+                        throw new InvalidProductException("Solo se puede reactivar una publicacion pausada");
+                }
+                product.setStatus(ProductStatus.ACTIVO);
+                return productRepository.save(product);
         }
 
         private void validateOwnerOrAdmin(

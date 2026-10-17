@@ -1,0 +1,148 @@
+diff --git a/src/main/java/com/uade/elrincondelmazo/controllers/ProductsController.java b/src/main/java/com/uade/elrincondelmazo/controllers/ProductsController.java
+--- a/src/main/java/com/uade/elrincondelmazo/controllers/ProductsController.java
++++ b/src/main/java/com/uade/elrincondelmazo/controllers/ProductsController.java
+@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
+ import org.springframework.http.MediaType;
+ import org.springframework.http.ResponseEntity;
+ import org.springframework.security.core.annotation.AuthenticationPrincipal;
+-import org.springframework.web.bind.annotation.DeleteMapping;
+ import org.springframework.web.bind.annotation.GetMapping;
+ import org.springframework.web.bind.annotation.PathVariable;
+ import org.springframework.web.bind.annotation.PostMapping;
+@@ -114,16 +113,17 @@ public class ProductsController {
+                                 ProductResponse.fromProduct(product));
+         }
+ 
+-        @DeleteMapping("/{id}")
+-        public ResponseEntity<Void> deleteProduct(
++        @PutMapping("/{id}/deactivate")
++        public ResponseEntity<ProductResponse> deactivateProduct(
+                         @AuthenticationPrincipal User user,
+                         @PathVariable Long id) {
+ 
+-                productService.deleteProduct(
++                Product product = productService.deactivateProduct(
+                                 user.getId(),
+                                 id);
+ 
+-                return ResponseEntity.noContent().build();
++                return ResponseEntity.ok(
++                                ProductResponse.fromProduct(product));
+         }
+ 
+         @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+diff --git a/src/main/java/com/uade/elrincondelmazo/service/ProductService.java b/src/main/java/com/uade/elrincondelmazo/service/ProductService.java
+--- a/src/main/java/com/uade/elrincondelmazo/service/ProductService.java
++++ b/src/main/java/com/uade/elrincondelmazo/service/ProductService.java
+@@ -27,7 +27,7 @@ public interface ProductService {
+                         Long id,
+                         ProductRequest productRequest);
+ 
+-        void deleteProduct(
++        Product deactivateProduct(
+                         Long userId,
+                         Long id);
+ 
+diff --git a/src/main/java/com/uade/elrincondelmazo/service/impl/ProductServiceImpl.java b/src/main/java/com/uade/elrincondelmazo/service/impl/ProductServiceImpl.java
+--- a/src/main/java/com/uade/elrincondelmazo/service/impl/ProductServiceImpl.java
++++ b/src/main/java/com/uade/elrincondelmazo/service/impl/ProductServiceImpl.java
+@@ -180,16 +180,18 @@ public class ProductServiceImpl implements ProductService {
+         }
+ 
+         @Override
+-        public void deleteProduct(
++        public Product deactivateProduct(
+                         Long userId,
+                         Long id) {
+ 
+-                Product product = getProductById(id);
++                Product product = productRepository.findById(id)
++                                .orElseThrow(() -> new ResourceNotFoundException(
++                                                "Producto no encontrado con id: " + id));
+ 
+                 validateOwnerOrAdmin(product, userId);
+ 
+                 product.setStatus(ProductStatus.ELIMINADO);
+-                productRepository.save(product);
++                return productRepository.save(product);
+         }
+ 
+         private void validateOwnerOrAdmin(
+diff --git a/src/main/java/com/uade/elrincondelmazo/controllers/UsersController.java b/src/main/java/com/uade/elrincondelmazo/controllers/UsersController.java
+--- a/src/main/java/com/uade/elrincondelmazo/controllers/UsersController.java
++++ b/src/main/java/com/uade/elrincondelmazo/controllers/UsersController.java
+@@ -3,7 +3,6 @@ package com.uade.elrincondelmazo.controllers;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.http.ResponseEntity;
+ import org.springframework.security.core.Authentication;
+-import org.springframework.web.bind.annotation.DeleteMapping;
+ import org.springframework.web.bind.annotation.GetMapping;
+ import org.springframework.web.bind.annotation.PatchMapping;
+ import org.springframework.web.bind.annotation.PathVariable;
+@@ -45,14 +44,14 @@ public class UsersController {
+ 
+     }
+ 
+-    @DeleteMapping("/me")
+-    public ResponseEntity<Void> deleteUser(Authentication authentication) {
++    @PutMapping("/me/deactivate")
++    public ResponseEntity<UserResponse> deactivateUser(Authentication authentication) {
+ 
+         String email = authentication.getName();
+ 
+-        userService.deleteUser(email);
++        User user = userService.deactivateUser(email);
+ 
+-        return ResponseEntity.noContent().build();
++        return ResponseEntity.ok(toResponse(user));
+     }
+ 
+     @PatchMapping("/promote/{id}")
+diff --git a/src/main/java/com/uade/elrincondelmazo/service/UserService.java b/src/main/java/com/uade/elrincondelmazo/service/UserService.java
+--- a/src/main/java/com/uade/elrincondelmazo/service/UserService.java
++++ b/src/main/java/com/uade/elrincondelmazo/service/UserService.java
+@@ -10,7 +10,7 @@ public interface UserService {
+ 
+     User updateUser(String email, UpdateUserRequest request);
+ 
+-    void deleteUser(String email);
++    User deactivateUser(String email);
+ 
+     User promoteToAdmin(Long id);
+ }
+diff --git a/src/main/java/com/uade/elrincondelmazo/service/impl/UserServiceImpl.java b/src/main/java/com/uade/elrincondelmazo/service/impl/UserServiceImpl.java
+--- a/src/main/java/com/uade/elrincondelmazo/service/impl/UserServiceImpl.java
++++ b/src/main/java/com/uade/elrincondelmazo/service/impl/UserServiceImpl.java
+@@ -56,13 +56,13 @@ public class UserServiceImpl implements UserService {
+     }
+ 
+     @Override
+-    public void deleteUser(String email) {
++    public User deactivateUser(String email) {
+ 
+         User user = getByEmail(email);
+ 
+         user.setActive(false);
+ 
+-        userRepository.save(user);
++        return userRepository.save(user);
+     }
+ 
+     @Override
+diff --git a/src/main/java/com/uade/elrincondelmazo/controllers/CollectionsControler.java b/src/main/java/com/uade/elrincondelmazo/controllers/CollectionsControler.java
+--- a/src/main/java/com/uade/elrincondelmazo/controllers/CollectionsControler.java
++++ b/src/main/java/com/uade/elrincondelmazo/controllers/CollectionsControler.java
+@@ -83,12 +83,12 @@ public class CollectionsControler {
+     }
+ 
+     @DeleteMapping("/{id}")
+-    public ResponseEntity<Void> deleteCollection(
++    public ResponseEntity<String> deleteCollection(
+             @PathVariable Long id
+     ) {
+         collectionService.deleteCollection(id);
+ 
+-        return ResponseEntity.noContent().build();
++        return ResponseEntity.ok("Colección eliminada correctamente");
+     }
+ }

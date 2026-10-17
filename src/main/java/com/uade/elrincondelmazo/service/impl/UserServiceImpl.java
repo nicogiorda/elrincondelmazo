@@ -2,6 +2,12 @@ package com.uade.elrincondelmazo.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+import com.uade.elrincondelmazo.enums.ProductStatus;
+import com.uade.elrincondelmazo.repository.ProductRepository;
 
 import com.uade.elrincondelmazo.entity.User;
 import com.uade.elrincondelmazo.entity.dto.UpdateUserRequest;
@@ -16,6 +22,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
 
     /*
      * public UserServiceImpl(UserRepository userRepository) {
@@ -59,13 +68,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUser(String email) {
+    @Transactional
+    public User deactivateUser(String email) {
 
         User user = getByEmail(email);
-
         user.setActive(false);
-
         userRepository.save(user);
+
+        productRepository.withdrawSellerPublications(user.getId(),
+                List.of(ProductStatus.ACTIVO, ProductStatus.AGOTADO), ProductStatus.INACTIVO);
+
+        // The bulk update cleared Hibernate's context; reload the response from this transaction.
+        return getById(user.getId());
     }
 
     @Override

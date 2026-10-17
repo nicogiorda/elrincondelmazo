@@ -40,6 +40,8 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/v1/auth/**").permitAll()
                                                 .requestMatchers("/error/**").permitAll()
 
+                                                .requestMatchers(HttpMethod.GET, "/products/mine").authenticated()
+
                                                 .requestMatchers(
                                                                 HttpMethod.GET,
                                                                 "/products",

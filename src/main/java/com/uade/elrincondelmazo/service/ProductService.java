@@ -34,6 +34,12 @@ public interface ProductService {
                         Long userId,
                         Long id);
 
+        Page<Product> getOwnPublications(Long userId, PageRequest pageRequest);
+
+        Product pauseProduct(Long userId, Long id);
+
+        Product resumeProduct(Long userId, Long id);
+
         Page<Product> getProductsBySeller(
                         Long sellerId,
                         PageRequest pageRequest);
