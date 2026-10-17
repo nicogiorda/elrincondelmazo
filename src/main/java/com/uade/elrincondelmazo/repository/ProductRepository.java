@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -46,6 +47,17 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("sellerId") Long sellerId,
             @Param("excludedStatus") ProductStatus excludedStatus,
             Pageable pageable);
+
+    // Flush the account change before SQL and discard entities made stale by the bulk update.
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+            UPDATE Product p SET p.status = :inactiveStatus
+            WHERE p.seller.id = :sellerId AND p.status IN :visibleStatuses
+            """)
+    int withdrawSellerPublications(
+            @Param("sellerId") Long sellerId,
+            @Param("visibleStatuses") List<ProductStatus> visibleStatuses,
+            @Param("inactiveStatus") ProductStatus inactiveStatus);
 
     Page<Product> findBySellerId(
             Long sellerId,
