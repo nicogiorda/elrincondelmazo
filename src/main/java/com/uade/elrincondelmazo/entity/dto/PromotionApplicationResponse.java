@@ -11,6 +11,12 @@ import lombok.Data;
 
 public class PromotionApplicationResponse {
 
+    /*
+     * DTO que representa el resultado de aplicar promociones al carrito.
+     * - `totalDiscount`: monto total descontado del subtotal
+     * - `appliedPromotions`: lista con el desglose de promociones aplicadas
+     */
+
     private BigDecimal totalDiscount;
     private List<AppliedPromotionResponse> appliedPromotions;
 }

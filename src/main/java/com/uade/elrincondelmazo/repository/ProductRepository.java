@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.EntityGraph;
 import com.uade.elrincondelmazo.enums.ProductStatus;
 
 import com.uade.elrincondelmazo.entity.Product;
@@ -18,6 +19,7 @@ import com.uade.elrincondelmazo.enums.ProductType;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
+    @EntityGraph(attributePaths = {"seller", "collection"})
     @Query("""
             SELECT p FROM Product p
             WHERE p.status IN :visibleStatuses

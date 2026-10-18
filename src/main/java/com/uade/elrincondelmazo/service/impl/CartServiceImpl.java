@@ -159,9 +159,12 @@ public class CartServiceImpl implements CartService {
                                         "El producto no está disponible");
                 }
 
-                if (request.getQuantity() > item.getProduct().getStock()) {
-                        throw new InvalidCartException(
-                                        "Stock insuficiente");
+                int currentQuantity = item.getQuantity();
+                int newQuantity = request.getQuantity();
+                int availableStock = item.getProduct().getStock();
+
+                if (newQuantity > currentQuantity && newQuantity > availableStock) {
+                    throw new InvalidCartException("Stock insuficiente");
                 }
 
                 item.setQuantity(request.getQuantity());
@@ -197,7 +200,7 @@ public class CartServiceImpl implements CartService {
          * los items.
          * Es privada porque es una funcion interna de la clase y no necesita ser
          * expuesta a otras clases.
-         * 
+         *
          * @param items
          * @return subtotal del carrito como BigDecimal
          */
