@@ -8,7 +8,8 @@ import com.uade.elrincondelmazo.repository.CollectionRepository;
 
 @Component
 public class CollectionDataInitializer implements CommandLineRunner {
-
+    // Inicializador de datos que se ejecuta al arrancar la aplicación.
+    // Inserta colecciones base si no existen en la base de datos.
     private final CollectionRepository collectionRepository;
 
     public CollectionDataInitializer(CollectionRepository collectionRepository) {
@@ -18,12 +19,14 @@ public class CollectionDataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
 
+        // Nombres de ejemplo que se crearán si no existen
         createCollectionIfNotExists("NBA");
         createCollectionIfNotExists("My Little Pony");
         createCollectionIfNotExists("Cars");
         createCollectionIfNotExists("Marvel");
     }
 
+    // Helper que crea una colección solo si no existe una con ese nombre
     private void createCollectionIfNotExists(String name) {
 
         if (!collectionRepository.existsByName(name)) {
