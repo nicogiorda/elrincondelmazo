@@ -76,11 +76,11 @@ public class CollectionsControler {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCollection(
+    public ResponseEntity<String> deleteCollection(
             @PathVariable Long id
     ) {
-                // Elimina la colección indicada. Devuelve 204 No Content al finalizar.
-                collectionService.deleteCollection(id);
-                return ResponseEntity.noContent().build();
+        collectionService.deleteCollection(id);
+
+        return ResponseEntity.ok("Colección eliminada correctamente");
     }
 }

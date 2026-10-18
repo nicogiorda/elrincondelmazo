@@ -301,13 +301,20 @@ public class PromotionServiceImpl implements PromotionService {
                         return BigDecimal.ZERO;
                 }
 
-                int totalQuantity = items.stream().mapToInt(CartItem::getQuantity).sum();
+                int totalQuantity = items.stream()
+                                .filter(item -> promotion.getProductType() == null
+                                                || item.getProduct().getType() == promotion.getProductType())
+                                .mapToInt(
+                                                CartItem::getQuantity)
+                                .sum();
 
                 if (totalQuantity < promotion.getMinimumQuantity()) {
                         return BigDecimal.ZERO;
                 }
 
-                return subtotal;
+                return promotion.getProductType() == null
+                                ? subtotal
+                                : getProductTypeDiscountBase(promotion, items);
         }
 
         private BigDecimal getCollectionDiscountBase(
@@ -429,10 +436,8 @@ public class PromotionServiceImpl implements PromotionService {
 
         private PromotionApplicationResponse applyStackableRules(
                 List<AppliedPromotionResponse> applicablePromotions,
-                List<Promotion> promotions,BigDecimal subtotal) {
+                List<Promotion> promotions, BigDecimal subtotal) {
 
-
-                // Si no hay promociones aplicables retorna 0
                 if (applicablePromotions.isEmpty()) {
                         return new PromotionApplicationResponse(BigDecimal.ZERO, List.of());
                 }
@@ -440,46 +445,45 @@ public class PromotionServiceImpl implements PromotionService {
                 // Separa promociones que permiten combinarse (stackable) y las que no
                 List<AppliedPromotionResponse> stackablePromotions = applicablePromotions.stream()
                                 .filter(applied -> isStackable(applied.getPromotionId(), promotions))
+                                .sorted(Comparator.comparing(AppliedPromotionResponse::getPromotionId))
                                 .toList();
 
-                List<AppliedPromotionResponse> nonStackablePromotions = applicablePromotions.stream()
+                AppliedPromotionResponse bestNonStackable = applicablePromotions.stream()
                                 .filter(applied -> !isStackable(applied.getPromotionId(), promotions))
-                                .toList();
+                                // For equal individual savings, the lowest ID wins.
+                                .max(Comparator.comparing(AppliedPromotionResponse::getDiscountApplied)
+                                                .thenComparing(AppliedPromotionResponse::getPromotionId,
+                                                                Comparator.reverseOrder()))
+                                .orElse(null);
 
-                // Si no hay promociones no-stackable, aplicamos todas las stackables
-                // hasta agotar el subtotal (no aplicar más descuento que el subtotal)
-                if (nonStackablePromotions.isEmpty()) {
+                List<AppliedPromotionResponse> appliedWithinSubtotal = new ArrayList<>();
+                BigDecimal remainingDiscount = subtotal;
 
-                         List<AppliedPromotionResponse> appliedWithinSubtotal = new ArrayList<>();
-
-                        BigDecimal remainingDiscount = subtotal;
-
-                        for (AppliedPromotionResponse applied : stackablePromotions) {
-
-                                if (remainingDiscount.compareTo(BigDecimal.ZERO) <= 0) {
-                                        break;
-                                }
-
-                                // No permitir que el descuento aplicado supere lo que queda del subtotal
-                                BigDecimal discountToApply = applied.getDiscountApplied().min(remainingDiscount);
-
-                                appliedWithinSubtotal.add(new AppliedPromotionResponse(
-                                        applied.getPromotionId(), applied.getPromotionName(), discountToApply));
-
-                                remainingDiscount = remainingDiscount.subtract(discountToApply);
+                // Amounts were already calculated on each promotion's own base, not sequentially.
+                // Allocate the subtotal cap by ID so the breakdown is stable and adds up exactly.
+                for (AppliedPromotionResponse applied : stackablePromotions) {
+                        if (remainingDiscount.compareTo(BigDecimal.ZERO) <= 0) {
+                                break;
                         }
-
-                        BigDecimal totalDiscount = subtotal.subtract(remainingDiscount);
-
-                        return new PromotionApplicationResponse(totalDiscount, appliedWithinSubtotal);
+                        BigDecimal discountToApply = applied.getDiscountApplied().min(remainingDiscount);
+                        appliedWithinSubtotal.add(new AppliedPromotionResponse(
+                                        applied.getPromotionId(), applied.getPromotionName(), discountToApply));
+                        remainingDiscount = remainingDiscount.subtract(discountToApply);
                 }
 
-                // Si hay al menos una no-stackable, selecciona la mejor (mayor descuento)
-                AppliedPromotionResponse bestNonStackable = nonStackablePromotions.stream()
-                                .max(Comparator.comparing(AppliedPromotionResponse::getDiscountApplied))
-                                .orElseThrow();
+                BigDecimal stackableDiscount = subtotal.subtract(remainingDiscount);
 
-                return new PromotionApplicationResponse(bestNonStackable.getDiscountApplied(), List.of(bestNonStackable));
+                if (bestNonStackable != null) {
+                        BigDecimal nonStackableDiscount = bestNonStackable.getDiscountApplied().min(subtotal);
+                        // An exclusive promotion wins ties; it is never combined with other promotions.
+                        if (nonStackableDiscount.compareTo(stackableDiscount) >= 0) {
+                                return new PromotionApplicationResponse(nonStackableDiscount,
+                                                List.of(new AppliedPromotionResponse(bestNonStackable.getPromotionId(),
+                                                                bestNonStackable.getPromotionName(), nonStackableDiscount)));
+                        }
+                }
+
+                return new PromotionApplicationResponse(stackableDiscount, appliedWithinSubtotal);
         }
 
         private boolean isStackable(
