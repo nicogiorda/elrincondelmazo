@@ -178,6 +178,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         @Override
+        @Transactional
         public Product updateProduct(
                         Long userId,
                         Long id,
@@ -185,7 +186,7 @@ public class ProductServiceImpl implements ProductService {
 
                 validateProduct(request);
 
-                Product product = getProductById(id);
+                Product product = lockedProduct(id);
                 validateOwnerOrAdmin(product, userId);
 
                 Collection collection = collectionRepository
@@ -216,7 +217,7 @@ public class ProductServiceImpl implements ProductService {
                         Long userId,
                         Long id) {
 
-                Product product = productRepository.findById(id)
+                Product product = productRepository.lockById(id)
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Producto no encontrado con id: " + id));
 
@@ -236,7 +237,7 @@ public class ProductServiceImpl implements ProductService {
         @Override
         @Transactional
         public Product pauseProduct(Long userId, Long id) {
-                Product product = getProductById(id);
+                Product product = lockedProduct(id);
                 validateOwnerOrAdmin(product, userId);
                 if (product.getStatus() == ProductStatus.INACTIVO) {
                         return product;
@@ -252,7 +253,7 @@ public class ProductServiceImpl implements ProductService {
         @Override
         @Transactional
         public Product resumeProduct(Long userId, Long id) {
-                Product product = getProductById(id);
+                Product product = lockedProduct(id);
                 validateOwnerOrAdmin(product, userId);
                 if (product.getStock() <= 0) {
                         throw new InvalidProductException("No se puede reactivar una publicacion sin stock disponible");
@@ -265,6 +266,13 @@ public class ProductServiceImpl implements ProductService {
                 }
                 product.setStatus(ProductStatus.ACTIVO);
                 return productRepository.save(product);
+        }
+
+        private Product lockedProduct(Long id) {
+                Product product = productRepository.lockById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
+                if (product.getStatus() == ProductStatus.ELIMINADO) throw new ResourceNotFoundException("Producto no encontrado");
+                return product;
         }
 
         private void validateOwnerOrAdmin(

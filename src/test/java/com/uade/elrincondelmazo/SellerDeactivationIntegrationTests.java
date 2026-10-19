@@ -188,7 +188,7 @@ class SellerDeactivationIntegrationTests {
         assertThat(row("cart", cart.getId())).isEqualTo(cartBefore);
         assertThat(row("cart_item", item.getId())).isEqualTo(itemBefore);
         mvc.perform(post("/orders").header("Authorization", auth(buyer))
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"paymentMethod\":\"MERCADO_PAGO\"}"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"paymentMethod\":\"MERCADO_PAGO\",\"expectedTotal\":100,\"requestKey\":\""+UUID.randomUUID()+"\"}"))
                 .andExpect(status().isBadRequest());
         assertThat(orders.count()).isEqualTo(orderCount);
         assertThat(orderItems.count()).isEqualTo(orderItemCount);
