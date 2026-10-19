@@ -1,6 +1,6 @@
 # Promociones públicas y administración
 
-Base: origin/main `14b1f24`. Rama: `audit/promotions-collections`.
+Base: origin/main `14b1f24`. Rama: `audit/promotion-collections`.
 
 ## Contrato
 
