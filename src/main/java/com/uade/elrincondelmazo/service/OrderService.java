@@ -9,6 +9,8 @@ public interface OrderService {
 
     List<OrderResponse> getOrdersByUserId(Long userId);
 
+    com.uade.elrincondelmazo.entity.dto.CheckoutPreviewResponse preview(Long userId, CheckoutRequest request);
+
     OrderResponse checkout(Long userId, CheckoutRequest request);
 
     OrderResponse getOrderById(Long userId, Long orderId);
