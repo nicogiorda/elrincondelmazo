@@ -30,6 +30,11 @@ public class PromotionController {
         @Autowired
         private PromotionService promotionService;
 
+    @GetMapping("/public")
+    public ResponseEntity<List<PromotionResponse>> getPublicPromotions() {
+        return ResponseEntity.ok(promotionService.getPublicPromotions());
+    }
+
     @GetMapping
     public ResponseEntity<List<PromotionResponse>> getAllPromotions() {
 

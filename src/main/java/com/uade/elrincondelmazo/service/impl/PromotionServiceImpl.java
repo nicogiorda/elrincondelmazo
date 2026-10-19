@@ -63,6 +63,17 @@ public class PromotionServiceImpl implements PromotionService {
         // ==========================================
 
         @Override
+        @Transactional(readOnly = true)
+        public List<PromotionResponse> getPublicPromotions() {
+                // El modelo actual no distingue promociones privadas: se publican las vigentes.
+                // Los límites inclusivos coinciden con isValidAt, utilizado por checkout.
+                return promotionRepository.findPublicAt(LocalDateTime.now()).stream()
+                                .map(this::toResponse)
+                                .toList();
+        }
+
+        @Override
+        @Transactional(readOnly = true)
         public List<PromotionResponse> getAllPromotions() {
 
                 // Recupera todas las promociones de la BD y las mapea a DTOs
@@ -73,6 +84,7 @@ public class PromotionServiceImpl implements PromotionService {
         }
 
         @Override
+        @Transactional(readOnly = true)
         public PromotionResponse getPromotionById(Long id) {
 
 
@@ -84,6 +96,7 @@ public class PromotionServiceImpl implements PromotionService {
         }
 
         @Override
+        @Transactional
         public PromotionResponse createPromotion(
                         CreatePromotionRequest request) {
 
@@ -129,6 +142,7 @@ public class PromotionServiceImpl implements PromotionService {
         }
 
         @Override
+        @Transactional
         public PromotionResponse updatePromotion(
                         Long id,
                         UpdatePromotionRequest request) {
@@ -167,6 +181,7 @@ public class PromotionServiceImpl implements PromotionService {
         }
 
         @Override
+        @Transactional
         public PromotionResponse activatePromotion(
                         Long id) {
 
@@ -178,6 +193,7 @@ public class PromotionServiceImpl implements PromotionService {
         }
 
         @Override
+        @Transactional
         public PromotionResponse deactivatePromotion(
                         Long id) {
 
