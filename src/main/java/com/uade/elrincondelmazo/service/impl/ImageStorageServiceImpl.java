@@ -19,7 +19,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.client.RestClientException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.uade.elrincondelmazo.exception.ImageStorageException;
@@ -29,6 +31,8 @@ import com.uade.elrincondelmazo.service.ImageStorageService;
 @Service
 public class ImageStorageServiceImpl
         implements ImageStorageService {
+
+    private static final Logger log = LoggerFactory.getLogger(ImageStorageServiceImpl.class);
 
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -53,10 +57,40 @@ public class ImageStorageServiceImpl
     private String bucket;
 
     @Override
-    public String uploadProductImage(
-            Long userId,
-            MultipartFile file) {
+    public String uploadProductImage(Long userId, MultipartFile file) {
+        return uploadImage("products/" + userId + "/", file);
+    }
 
+    @Override
+    public String uploadAlbumImage(Long userId, MultipartFile file) {
+        return uploadImage("albums/" + userId + "/", file);
+    }
+
+    @Override
+    public void deleteAlbumImage(Long userId, String imageUrl) {
+        // Only ever delete a UUID-named upload under this user's album prefix.
+        String prefix = buildPublicUrl("albums/" + userId + "/");
+        if (imageUrl == null || !imageUrl.startsWith(prefix)) {
+            throw new IllegalArgumentException("La imagen no pertenece al álbum del usuario");
+        }
+        String filename = imageUrl.substring(prefix.length());
+        if (!filename.matches("[0-9a-fA-F-]{36}\\.webp")) {
+            throw new IllegalArgumentException("Nombre de imagen no válido");
+        }
+        String path = "albums/" + userId + "/" + filename;
+        try {
+            restClient.delete()
+                    .uri(supabaseUrl + "/storage/v1/object/" + bucket + "/" + path)
+                    .header("apikey", secretKey)
+                    .header("Authorization", "Bearer " + secretKey)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (RestClientException e) {
+            log.warn("No se pudo limpiar la foto del álbum del usuario {}", userId);
+        }
+    }
+
+    private String uploadImage(String prefix, MultipartFile file) {
         validateFile(file);
 
         BufferedImage original = readImage(file);
@@ -65,11 +99,7 @@ public class ImageStorageServiceImpl
 
         byte[] webpBytes = convertToWebp(resized);
 
-        String path = "products/"
-                + userId
-                + "/"
-                + UUID.randomUUID()
-                + ".webp";
+        String path = prefix + UUID.randomUUID() + ".webp";
 
         uploadToSupabase(
                 path,
@@ -266,7 +296,7 @@ public class ImageStorageServiceImpl
                     .retrieve()
                     .toBodilessEntity();
 
-        } catch (RestClientResponseException e) {
+        } catch (RestClientException e) {
 
             throw new ImageStorageException(
                     "No se pudo subir la imagen a Supabase Storage");
