@@ -39,4 +39,8 @@ jobs:
       - name: Compile and run backend tests (audit profile)
         env:
           SPRING_PROFILES_ACTIVE: audit
+          SPRING_DATASOURCE_URL: jdbc:postgresql://127.0.0.1:55432/mazo_integration
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: postgres
+          SPRING_JPA_HIBERNATE_DDL_AUTO: update
         run: bash ./mvnw -B --no-transfer-progress verify
