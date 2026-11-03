@@ -3,6 +3,13 @@ package com.uade.elrincondelmazo;
 import com.uade.elrincondelmazo.exception.InvalidImageException;
 import com.uade.elrincondelmazo.service.impl.ImageStorageServiceImpl;
 import org.junit.jupiter.api.Test;
+import com.sun.net.httpserver.HttpServer;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.net.InetSocketAddress;
+import java.util.concurrent.atomic.AtomicReference;
+import static org.assertj.core.api.Assertions.assertThat;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -36,6 +43,52 @@ class AlbumImageStorageTests {
                 new MockMultipartFile("image", "large.png", "image/png",
                         new byte[10 * 1024 * 1024 + 1])))
                 .isInstanceOf(InvalidImageException.class);
+    }
+
+    @Test
+    void validPngIsConvertedUploadedUnderDedicatedAlbumPrefixAndCanBeDeleted() throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        AtomicReference<String> uploadPath = new AtomicReference<>();
+        AtomicReference<String> method = new AtomicReference<>();
+        AtomicReference<String> uploadedType = new AtomicReference<>();
+        AtomicReference<byte[]> uploadedBytes = new AtomicReference<>();
+        server.createContext("/storage/v1/object/cards/", exchange -> {
+            method.set(exchange.getRequestMethod());
+            if ("POST".equals(method.get())) {
+                uploadPath.set(exchange.getRequestURI().getPath());
+                uploadedType.set(exchange.getRequestHeaders().getFirst("Content-Type"));
+                uploadedBytes.set(exchange.getRequestBody().readAllBytes());
+            } else {
+                uploadPath.set(exchange.getRequestURI().getPath());
+            }
+            exchange.sendResponseHeaders(200, -1);
+            exchange.close();
+        });
+        server.start();
+        try {
+            ReflectionTestUtils.setField(service, "supabaseUrl",
+                    "http://127.0.0.1:" + server.getAddress().getPort());
+            ReflectionTestUtils.setField(service, "bucket", "cards");
+            ReflectionTestUtils.setField(service, "secretKey", "ci-placeholder");
+
+            BufferedImage image = new BufferedImage(8, 8, BufferedImage.TYPE_INT_RGB);
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            assertThat(ImageIO.write(image, "png", bytes)).isTrue();
+
+            String url = service.uploadAlbumImage(77L,
+                    new MockMultipartFile("image", "sample.png", "image/png", bytes.toByteArray()));
+            assertThat(url).contains("/storage/v1/object/public/cards/albums/77/");
+            assertThat(method.get()).isEqualTo("POST");
+            assertThat(uploadPath.get()).matches(".*/storage/v1/object/cards/albums/77/[0-9a-f-]{36}\\.webp");
+            assertThat(uploadedType.get()).startsWith("image/webp");
+            assertThat(uploadedBytes.get()).isNotEmpty();
+
+            service.deleteAlbumImage(77L, url);
+            assertThat(method.get()).isEqualTo("DELETE");
+            assertThat(uploadPath.get()).matches(".*/storage/v1/object/cards/albums/77/[0-9a-f-]{36}\\.webp");
+        } finally {
+            server.stop(0);
+        }
     }
 
     @Test
