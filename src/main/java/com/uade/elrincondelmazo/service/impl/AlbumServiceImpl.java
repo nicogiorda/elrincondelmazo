@@ -6,6 +6,10 @@ import com.uade.elrincondelmazo.entity.dto.album.MoveAlbumCardRequest;
 import com.uade.elrincondelmazo.enums.AlbumSectionKey;
 import com.uade.elrincondelmazo.repository.*;
 import com.uade.elrincondelmazo.service.AlbumService;
+import com.uade.elrincondelmazo.service.ImageStorageService;
+import com.uade.elrincondelmazo.enums.AlbumCardOrigin;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,13 +23,15 @@ public class AlbumServiceImpl implements AlbumService {
     private final AlbumSectionRepository sections;
     private final AlbumCardRepository cards;
     private final UserRepository users;
+    private final ImageStorageService imageStorage;
 
     public AlbumServiceImpl(AlbumRepository albums, AlbumSectionRepository sections,
-                            AlbumCardRepository cards, UserRepository users) {
+                            AlbumCardRepository cards, UserRepository users, ImageStorageService imageStorage) {
         this.albums = albums;
         this.sections = sections;
         this.cards = cards;
         this.users = users;
+        this.imageStorage = imageStorage;
     }
 
     @Override
@@ -92,6 +98,7 @@ public class AlbumServiceImpl implements AlbumService {
             // Remove the target row before updating the source to respect the unique slot index.
             cards.delete(occupant.get());
             cards.flush();
+            cleanupManualImageAfterCommit(userId, occupant.get());
         }
 
         card.setSection(target);
@@ -106,8 +113,21 @@ public class AlbumServiceImpl implements AlbumService {
     @Transactional
     public void removeCard(Long userId, Long cardId) {
         lockOwner(userId);
-        cards.delete(ownedCard(userId, cardId));
+        AlbumCard card = ownedCard(userId, cardId);
+        cards.delete(card);
+        cleanupManualImageAfterCommit(userId, card);
         // Removing a card intentionally never removes already unlocked pages.
+    }
+
+    private void cleanupManualImageAfterCommit(Long userId, AlbumCard card) {
+        if (card.getOrigin() != AlbumCardOrigin.MANUAL) return;
+        String url = card.getImageUrl();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                imageStorage.deleteAlbumImage(userId, url);
+            }
+        });
     }
 
     private void openNextPageWhenFull(AlbumSection section) {
