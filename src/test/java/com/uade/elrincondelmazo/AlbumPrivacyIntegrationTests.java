@@ -102,7 +102,7 @@ class AlbumPrivacyIntegrationTests {
                 .andExpect(jsonPath("$.sections[2].cards[0].name").value("Mi carta de Cars"));
         mvc.perform(patch("/albums/me/cards/{id}", card.getId()).header("Authorization", strangerToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"section\":\"CARS\",\"pageNumber\":1,\"slotIndex\":5}"))
+                        .content("{\"section\":\"CARS\",\"pageNumber\":1,\"slotIndex\":5,\"replaceExisting\":false}"))
                 .andExpect(status().isNotFound());
         mvc.perform(delete("/albums/me/cards/{id}", card.getId())
                         .header("Authorization", strangerToken))
