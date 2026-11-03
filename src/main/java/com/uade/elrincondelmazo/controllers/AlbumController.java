@@ -7,6 +7,8 @@ import com.uade.elrincondelmazo.entity.dto.album.PurchaseAlbumCardRequest;
 import com.uade.elrincondelmazo.entity.dto.album.AlbumPurchaseResponse;
 import com.uade.elrincondelmazo.enums.AlbumSectionKey;
 import com.uade.elrincondelmazo.service.AlbumCardRegistrationService;
+import com.uade.elrincondelmazo.service.AlbumSharingService;
+import com.uade.elrincondelmazo.entity.dto.album.AlbumVisibilityRequest;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 import java.net.URI;
@@ -22,15 +24,30 @@ import org.springframework.web.bind.annotation.*;
 public class AlbumController {
     private final AlbumService albumService;
     private final AlbumCardRegistrationService registration;
+    private final AlbumSharingService sharing;
 
-    public AlbumController(AlbumService albumService, AlbumCardRegistrationService registration) {
+    public AlbumController(AlbumService albumService, AlbumCardRegistrationService registration,
+                           AlbumSharingService sharing) {
         this.albumService = albumService;
         this.registration = registration;
+        this.sharing = sharing;
     }
 
     @GetMapping("/me")
     public ResponseEntity<AlbumResponse> getMine(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(albumService.getMine(user.getId()));
+    }
+
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<AlbumResponse> viewPublicOrOwn(
+            @AuthenticationPrincipal User user, @PathVariable Long userId) {
+        return ResponseEntity.ok(sharing.viewAlbum(user.getId(), userId));
+    }
+
+    @PatchMapping("/me/visibility")
+    public ResponseEntity<AlbumResponse> setVisibility(
+            @AuthenticationPrincipal User user, @Valid @RequestBody AlbumVisibilityRequest request) {
+        return ResponseEntity.ok(sharing.setVisibility(user.getId(), request.visibility()));
     }
 
     @GetMapping("/me/purchases")
