@@ -51,12 +51,16 @@ class AlbumImageStorageTests {
         AtomicReference<String> uploadPath = new AtomicReference<>();
         AtomicReference<String> method = new AtomicReference<>();
         AtomicReference<String> uploadedType = new AtomicReference<>();
+        AtomicReference<String> uploadApiKey = new AtomicReference<>();
+        AtomicReference<String> uploadAuthorization = new AtomicReference<>();
         AtomicReference<byte[]> uploadedBytes = new AtomicReference<>();
         server.createContext("/storage/v1/object/cards/", exchange -> {
             method.set(exchange.getRequestMethod());
             if ("POST".equals(method.get())) {
                 uploadPath.set(exchange.getRequestURI().getPath());
                 uploadedType.set(exchange.getRequestHeaders().getFirst("Content-Type"));
+                uploadApiKey.set(exchange.getRequestHeaders().getFirst("apikey"));
+                uploadAuthorization.set(exchange.getRequestHeaders().getFirst("Authorization"));
                 uploadedBytes.set(exchange.getRequestBody().readAllBytes());
             } else {
                 uploadPath.set(exchange.getRequestURI().getPath());
@@ -81,6 +85,8 @@ class AlbumImageStorageTests {
             assertThat(method.get()).isEqualTo("POST");
             assertThat(uploadPath.get()).matches(".*/storage/v1/object/cards/albums/77/[0-9a-f-]{36}\\.webp");
             assertThat(uploadedType.get()).startsWith("image/webp");
+            assertThat(uploadApiKey.get()).isEqualTo("ci-placeholder");
+            assertThat(uploadAuthorization.get()).isEqualTo("Bearer ci-placeholder");
             assertThat(uploadedBytes.get()).isNotEmpty();
 
             service.deleteAlbumImage(77L, url);

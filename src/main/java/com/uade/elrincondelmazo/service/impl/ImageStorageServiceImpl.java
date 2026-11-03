@@ -286,6 +286,7 @@ public class ImageStorageServiceImpl
                     .header(
                             "apikey",
                             secretKey)
+                    .header("Authorization", "Bearer " + secretKey)
                     .header(
                             "x-upsert",
                             "false")
