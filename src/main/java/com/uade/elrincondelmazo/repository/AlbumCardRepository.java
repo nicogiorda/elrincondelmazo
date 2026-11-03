@@ -9,4 +9,5 @@ public interface AlbumCardRepository extends JpaRepository<AlbumCard, Long> {
     List<AlbumCard> findBySectionIdInOrderByPageNumberAscSlotIndexAsc(List<Long> sectionIds);
     Optional<AlbumCard> findBySectionIdAndPageNumberAndSlotIndex(Long sectionId, int pageNumber, int slotIndex);
     long countBySectionIdAndPageNumber(Long sectionId, int pageNumber);
+    long countByOrderItem_Id(Long orderItemId);
 }

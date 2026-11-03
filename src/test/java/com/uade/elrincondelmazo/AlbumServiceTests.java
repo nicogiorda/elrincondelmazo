@@ -35,7 +35,7 @@ class AlbumServiceTests {
         });
         when(cards.findBySectionIdInOrderByPageNumberAscSlotIndexAsc(anyList())).thenReturn(List.of());
 
-        var result = new AlbumServiceImpl(albums, sections, cards, users).getMine(7L);
+        var result = new AlbumServiceImpl(albums, sections, cards, users, mock(com.uade.elrincondelmazo.service.ImageStorageService.class)).getMine(7L);
 
         assertThat(result.userId()).isEqualTo(7L);
         assertThat(result.visibility()).isEqualTo(AlbumVisibility.PRIVATE);
@@ -73,7 +73,7 @@ class AlbumServiceTests {
         }
         when(sections.findByAlbumIdOrderByIdAsc(11L)).thenReturn(existing);
         when(cards.findBySectionIdInOrderByPageNumberAscSlotIndexAsc(anyList())).thenReturn(List.of());
-        var result = new AlbumServiceImpl(albums, sections, cards, users).getMine(8L);
+        var result = new AlbumServiceImpl(albums, sections, cards, users, mock(com.uade.elrincondelmazo.service.ImageStorageService.class)).getMine(8L);
         assertThat(result.sections()).hasSize(4);
         verify(albums, never()).save(any());
         verify(sections, never()).save(any());
