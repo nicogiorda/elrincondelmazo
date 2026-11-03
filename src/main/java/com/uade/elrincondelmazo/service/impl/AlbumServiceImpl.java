@@ -1,37 +1,41 @@
 package com.uade.elrincondelmazo.service.impl;
+
 import com.uade.elrincondelmazo.entity.*;
 import com.uade.elrincondelmazo.entity.dto.album.AlbumResponse;
+import com.uade.elrincondelmazo.entity.dto.album.MoveAlbumCardRequest;
 import com.uade.elrincondelmazo.enums.AlbumSectionKey;
 import com.uade.elrincondelmazo.repository.*;
 import com.uade.elrincondelmazo.service.AlbumService;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import java.util.*;
 import java.util.stream.Collectors;
+
 @Service
 public class AlbumServiceImpl implements AlbumService {
     private final AlbumRepository albums;
     private final AlbumSectionRepository sections;
     private final AlbumCardRepository cards;
     private final UserRepository users;
-    public AlbumServiceImpl(AlbumRepository albums, AlbumSectionRepository sections, AlbumCardRepository cards, UserRepository users) {
+
+    public AlbumServiceImpl(AlbumRepository albums, AlbumSectionRepository sections,
+                            AlbumCardRepository cards, UserRepository users) {
         this.albums = albums;
         this.sections = sections;
         this.cards = cards;
         this.users = users;
     }
-    @Override @Transactional
+
+    @Override
+    @Transactional
     public AlbumResponse getMine(Long userId) {
-        // Lock the owner row to serialize first-time initialization across concurrent requests.
-        User user = users.lockById(userId).orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.NOT_FOUND, "Usuario inexistente"));
-        Album album = albums.findByUserId(userId).orElseGet(() -> {
-            Album created = new Album();
-            created.setUser(user);
-            return albums.save(created);
-        });
+        User user = lockOwner(userId);
+        Album album = getOrCreateAlbum(user);
         List<AlbumSection> stored = sections.findByAlbumIdOrderByIdAsc(album.getId());
-        Set<AlbumSectionKey> present = stored.stream().map(AlbumSection::getCollectionKey).collect(Collectors.toSet());
+        Set<AlbumSectionKey> present = stored.stream()
+                .map(AlbumSection::getCollectionKey).collect(Collectors.toSet());
         for (AlbumSectionKey key : AlbumSectionKey.values()) {
             if (!present.contains(key)) {
                 AlbumSection section = new AlbumSection();
@@ -40,21 +44,103 @@ public class AlbumServiceImpl implements AlbumService {
                 stored.add(sections.save(section));
             }
         }
+
         List<Long> ids = stored.stream().map(AlbumSection::getId).toList();
         Map<Long, List<AlbumResponse.CardResponse>> bySection = new HashMap<>();
         if (!ids.isEmpty()) {
             for (AlbumCard card : cards.findBySectionIdInOrderByPageNumberAscSlotIndexAsc(ids)) {
                 bySection.computeIfAbsent(card.getSection().getId(), ignored -> new ArrayList<>())
-                    .add(new AlbumResponse.CardResponse(card.getId(), card.getPageNumber(), card.getSlotIndex(),
-                            card.getName(), card.getImageUrl(), card.getOrigin()));
+                        .add(toResponse(card));
             }
         }
-        Map<AlbumSectionKey, AlbumSection> indexed = stored.stream().collect(Collectors.toMap(AlbumSection::getCollectionKey, section -> section));
-        List<AlbumResponse.SectionResponse> result = Arrays.stream(AlbumSectionKey.values()).map(key -> {
-            AlbumSection section = indexed.get(key);
-            return new AlbumResponse.SectionResponse(section.getId(), key, section.getPageCount(),
-                    bySection.getOrDefault(section.getId(), List.of()));
-        }).toList();
+
+        Map<AlbumSectionKey, AlbumSection> indexed = stored.stream()
+                .collect(Collectors.toMap(AlbumSection::getCollectionKey, section -> section));
+        List<AlbumResponse.SectionResponse> result = Arrays.stream(AlbumSectionKey.values())
+                .map(key -> {
+                    AlbumSection section = indexed.get(key);
+                    return new AlbumResponse.SectionResponse(section.getId(), key,
+                            section.getPageCount(), bySection.getOrDefault(section.getId(), List.of()));
+                }).toList();
         return new AlbumResponse(album.getId(), userId, album.getVisibility(), result);
+    }
+
+    @Override
+    @Transactional
+    public AlbumResponse.CardResponse moveCard(Long userId, Long cardId, MoveAlbumCardRequest request) {
+        lockOwner(userId); // Serialize every mutation for this user's album.
+        AlbumCard card = ownedCard(userId, cardId);
+        Album album = card.getSection().getAlbum();
+        AlbumSection target = sections.findByAlbumIdAndCollectionKey(album.getId(), request.section())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sección no encontrada"));
+
+        int page = request.pageNumber();
+        int slot = request.slotIndex();
+        if (page < 1 || page > target.getPageCount() || slot < 0 || slot > 8) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Posición de álbum inválida");
+        }
+        if (Objects.equals(card.getSection().getId(), target.getId())
+                && card.getPageNumber() == page && card.getSlotIndex() == slot) {
+            return toResponse(card);
+        }
+
+        Optional<AlbumCard> occupant = cards.findBySectionIdAndPageNumberAndSlotIndex(target.getId(), page, slot);
+        if (occupant.isPresent()) {
+            if (!request.replaceExisting()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "La posición ya está ocupada");
+            }
+            // Remove the target row before updating the source to respect the unique slot index.
+            cards.delete(occupant.get());
+            cards.flush();
+        }
+
+        card.setSection(target);
+        card.setPageNumber(page);
+        card.setSlotIndex(slot);
+        cards.saveAndFlush(card);
+        openNextPageWhenFull(target);
+        return toResponse(card);
+    }
+
+    @Override
+    @Transactional
+    public void removeCard(Long userId, Long cardId) {
+        lockOwner(userId);
+        cards.delete(ownedCard(userId, cardId));
+        // Removing a card intentionally never removes already unlocked pages.
+    }
+
+    private void openNextPageWhenFull(AlbumSection section) {
+        if (cards.countBySectionIdAndPageNumber(section.getId(), section.getPageCount()) == 9) {
+            section.setPageCount(section.getPageCount() + 1);
+            sections.save(section);
+        }
+    }
+
+    private User lockOwner(Long userId) {
+        return users.lockById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario inexistente"));
+    }
+
+    private Album getOrCreateAlbum(User user) {
+        return albums.findByUserId(user.getId()).orElseGet(() -> {
+            Album created = new Album();
+            created.setUser(user);
+            return albums.save(created);
+        });
+    }
+
+    private AlbumCard ownedCard(Long userId, Long cardId) {
+        AlbumCard card = cards.findById(cardId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Carta no encontrada"));
+        if (!Objects.equals(card.getSection().getAlbum().getUser().getId(), userId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Carta no encontrada");
+        }
+        return card;
+    }
+
+    private AlbumResponse.CardResponse toResponse(AlbumCard card) {
+        return new AlbumResponse.CardResponse(card.getId(), card.getPageNumber(), card.getSlotIndex(),
+                card.getName(), card.getImageUrl(), card.getOrigin());
     }
 }
