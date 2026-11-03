@@ -43,4 +43,7 @@ jobs:
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: postgres
           SPRING_JPA_HIBERNATE_DDL_AUTO: update
+          SUPABASE_URL: https://example.invalid
+          SUPABASE_SECRET_KEY: ci-placeholder-not-a-real-secret
+          SUPABASE_STORAGE_BUCKET: ci-test
         run: bash ./mvnw -B --no-transfer-progress verify
