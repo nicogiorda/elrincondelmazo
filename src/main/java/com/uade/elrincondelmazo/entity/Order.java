@@ -21,12 +21,16 @@ import lombok.Data;
 
 @Entity
 @Data
-@Table(name = "orders")
+@Table(name = "orders", uniqueConstraints = @jakarta.persistence.UniqueConstraint(
+        name = "orders_user_request_uq", columnNames = {"user_id", "request_key"}))
 public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "request_key")
+    private java.util.UUID requestKey;
 
     //No usamos referenced column id porque al no especificar una columna, hibernate referencia automaticamente a la primary key de User
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

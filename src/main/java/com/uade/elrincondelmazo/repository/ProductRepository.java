@@ -19,6 +19,10 @@ import com.uade.elrincondelmazo.enums.ProductType;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from Product p where p.id = :id")
+    java.util.Optional<Product> lockById(@Param("id") Long id);
+
     @EntityGraph(attributePaths = {"seller", "collection"})
     @Query("""
             SELECT p FROM Product p

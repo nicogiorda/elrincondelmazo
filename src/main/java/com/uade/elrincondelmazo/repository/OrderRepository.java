@@ -15,6 +15,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     ///Pero las operaciones especificas deben implementarse manualmente.
     List<Order> findByUserId(Long userId);
 
+    Optional<Order> findByUserIdAndRequestKey(Long userId, java.util.UUID requestKey);
+
     Optional<Order> findByIdAndUserId(Long orderId, Long userId);
 
 }

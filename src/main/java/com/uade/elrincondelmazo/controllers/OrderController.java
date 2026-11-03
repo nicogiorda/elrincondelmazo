@@ -40,7 +40,7 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<OrderResponse> checkout(
             @AuthenticationPrincipal User user,
-            @Valid @RequestBody CheckoutRequest request) {
+            @org.springframework.validation.annotation.Validated(CheckoutRequest.Confirmation.class) @RequestBody CheckoutRequest request) {
 
         OrderResponse order =
                 orderService.checkout(
@@ -54,6 +54,12 @@ public class OrderController {
         return ResponseEntity
                 .created(location)
                 .body(order);
+    }
+
+    @PostMapping("/preview")
+    public ResponseEntity<com.uade.elrincondelmazo.entity.dto.CheckoutPreviewResponse> preview(
+            @AuthenticationPrincipal User user, @Valid @RequestBody CheckoutRequest request) {
+        return ResponseEntity.ok(orderService.preview(user.getId(), request));
     }
 
     @GetMapping("/{orderId}")

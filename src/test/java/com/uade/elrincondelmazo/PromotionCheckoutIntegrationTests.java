@@ -103,7 +103,7 @@ class PromotionCheckoutIntegrationTests {
         BigDecimal discount = new BigDecimal(expected);
         BigDecimal total = new BigDecimal("100.00").subtract(discount);
         var result = mvc.perform(post("/orders").header("Authorization", "Bearer " + jwt.generateToken(buyer))
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"paymentMethod\":\"MERCADO_PAGO\"}"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"paymentMethod\":\"MERCADO_PAGO\",\"expectedTotal\":" + total + ",\"requestKey\":\"" + UUID.randomUUID() + "\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.subtotal").value(100))
                 .andExpect(jsonPath("$.totalDiscount").value(discount.doubleValue()))

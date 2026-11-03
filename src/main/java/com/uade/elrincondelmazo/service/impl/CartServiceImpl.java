@@ -25,6 +25,7 @@ import com.uade.elrincondelmazo.repository.UserRepository;
 import com.uade.elrincondelmazo.service.CartService;
 
 @Service
+@org.springframework.transaction.annotation.Transactional
 public class CartServiceImpl implements CartService {
 
         private final CartRepository cartRepository;
@@ -46,12 +47,14 @@ public class CartServiceImpl implements CartService {
 
         @Override
         public CartResponse getOrCreateCart(Long userId) {
+                userRepository.lockById(userId).orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
                 return toCartResponse(getOrCreateCartEntity(userId));
         }
 
         @Override
         public CartResponse addItem(Long userId, AddCartItemRequest request) {
+                userRepository.lockById(userId).orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
                 ///Validamos que el producto exista con ese Id
                 Product product = productRepository.findById(request.getProductId())
@@ -97,13 +100,13 @@ public class CartServiceImpl implements CartService {
                 } else {
 
                 ///Si el item ya existe en el carrito, verificamos que la cantidad solicitada no supere el stock del producto y actualizamos la cantidad del item
-                        int newQuantity = item.getQuantity() + request.getQuantity();
+                        long newQuantity = (long) item.getQuantity() + request.getQuantity();
 
                         if (newQuantity > product.getStock()) {
                                 throw new InvalidCartException("Stock insuficiente");
                         }
 
-                        item.setQuantity(newQuantity);
+                        item.setQuantity((int) newQuantity);
                 }
 
                 cartItemRepository.save(item);
@@ -135,6 +138,7 @@ public class CartServiceImpl implements CartService {
                         Long userId,
                         Long cartItemId,
                         UpdateCartItemQuantityRequest request) {
+                userRepository.lockById(userId).orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
                 if (request.getQuantity() == null || request.getQuantity() <= 0) {
                         throw new InvalidCartException(
@@ -176,6 +180,7 @@ public class CartServiceImpl implements CartService {
 
         @Override
         public CartResponse removeItem(Long userId, Long cartItemId) {
+                userRepository.lockById(userId).orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
                 Cart cart = cartRepository.findByUserId(userId)
                                 .orElseThrow(() -> new ResourceNotFoundException(

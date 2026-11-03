@@ -20,6 +20,9 @@ public interface PromotionService {
     // Devuelve una lista con todas las promociones (mapeadas a DTOs)
     List<PromotionResponse> getAllPromotions();
 
+    // Lectura pública: solamente promociones activas y vigentes.
+    List<PromotionResponse> getPublicPromotions();
+
     // Obtiene una promoción por su id (lanza excepción en la implementación si no existe)
     PromotionResponse getPromotionById(Long id);
 

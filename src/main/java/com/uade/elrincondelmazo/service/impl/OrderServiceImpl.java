@@ -33,6 +33,8 @@ public class OrderServiceImpl implements OrderService {
     private final PromotionRepository promotionRepository;
 
     private final PromotionService promotionService;
+    @Autowired private UserRepository userRepository;
+    @jakarta.persistence.PersistenceContext private jakarta.persistence.EntityManager entityManager;
 
     @Autowired
     public OrderServiceImpl(OrderRepository orderRepository,
@@ -74,85 +76,35 @@ public class OrderServiceImpl implements OrderService {
      */
     public OrderResponse checkout(Long userId, CheckoutRequest request) {
 
-        ///Primero se vuelve a validar el carrito y los items, para asegurarse de que no haya cambios desde la ultima vez que se consulto.
-
-        ///Se busca el carrito del ususario
-        Cart cart = cartRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Carrito no encontrado para el usuario con id: " + userId));
-
-
-        ///Obtenemos los items del carrito.
-        List<CartItem> items =
-                cartItemRepository.findByCart_Id(cart.getId());
-
-        if (items.isEmpty()) {
-            throw new InvalidCartException(
-                    "No se puede realizar checkout con el carrito vacío");
+        Cart cart = lockedCart(userId);
+        if (request.getRequestKey() == null || request.getExpectedTotal() == null) {
+            throw new InvalidCartException("Se necesita una cotización aceptada y una clave de confirmación");
         }
-
-        BigDecimal subtotal = BigDecimal.ZERO;
-
-        for (CartItem item : items) {
-
-            Product product = productRepository
-                    .findById(item.getProduct().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Producto no encontrado con id: "
-                                    + item.getProduct().getId()));
-
-            if (product.getStatus() != ProductStatus.ACTIVO) {
-                throw new InvalidCartException(
-                        "El producto " + product.getId()
-                                + " ya no está disponible");
+        var previous = orderRepository.findByUserIdAndRequestKey(userId, request.getRequestKey());
+        if (previous.isPresent()) {
+            Order saved = previous.get();
+            if (saved.getPaymentMethod() != request.getPaymentMethod()
+                    || saved.getTotal().compareTo(request.getExpectedTotal()) != 0) {
+                throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,
+                        "La clave de confirmación ya fue usada con otros datos");
             }
-
-            if (item.getQuantity() == null || item.getQuantity() <= 0) {
-                throw new InvalidCartException(
-                        "Cantidad inválida para el producto "
-                                + product.getId());
-            }
-
-            if (item.getQuantity() > product.getStock()) {
-                throw new InvalidCartException(
-                        "Stock insuficiente para el producto "
-                                + product.getId());
-            }
-
-            if (product.getSeller().getId().equals(userId)) {
-                throw new InvalidCartException(
-                        "No se puede comprar un producto propio");
-            }
-
-            ///Luego para cada Item del carrito se calcula el subtotal obteniendo el precio actual del producto
-            ///y multiplicandolo por la cantidad de items dentro del carrito.
-            BigDecimal itemSubtotal =
-                    product.getPrice()
-                            .multiply(
-                                    BigDecimal.valueOf(
-                                            item.getQuantity()));
-
-            subtotal = subtotal.add(itemSubtotal);
+            return getOrderById(userId, saved.getId());
         }
-
-        ///Con el subtotal ya calculado, se delega al promotionService las promociones si aplican
-        PromotionApplicationResponse promotionResult =
-                promotionService.applyPromotions(
-                        items,
-                        request.getPaymentMethod()
-                );
-
-
-        BigDecimal discountTotal =
-                promotionResult.getTotalDiscount();
-
-        BigDecimal total =
-                subtotal.subtract(discountTotal);
+        List<CartItem> items = validatedItems(userId, cart);
+        CheckoutPreviewResponse quote = calculate(items, request);
+        BigDecimal subtotal = quote.getSubtotal();
+        BigDecimal discountTotal = quote.getTotalDiscount();
+        BigDecimal total = quote.getTotal();
+        if (total.compareTo(request.getExpectedTotal()) != 0) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,
+                    "El total cambió. Revisá la cotización actualizada antes de confirmar nuevamente.");
+        }
 
         ///Ahora se crea la orden de compra persistente, queda pendiente porque el checkout no procesa el pago.
         Order order = new Order();
 
         order.setUser(cart.getUser());
+        order.setRequestKey(request.getRequestKey());
         order.setOrderDate(LocalDateTime.now());
         order.setState(StateOrder.PENDIENTE);
         order.setPaymentMethod(request.getPaymentMethod());
@@ -171,11 +123,7 @@ public class OrderServiceImpl implements OrderService {
 
         for (CartItem item : items) {
 
-            Product product = productRepository.findById(
-                            item.getProduct().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Producto no encontrado con id: "
-                                    + item.getProduct().getId()));
+            Product product = item.getProduct();
 
             OrderItem orderItem = new OrderItem();
 
@@ -211,7 +159,7 @@ public class OrderServiceImpl implements OrderService {
                 new ArrayList<>();
 
         for (AppliedPromotionResponse appliedPromotion
-                : promotionResult.getAppliedPromotions()) {
+                : quote.getPromotions()) {
 
             Promotion promotion = promotionRepository
                     .findById(appliedPromotion.getPromotionId())
@@ -244,6 +192,71 @@ public class OrderServiceImpl implements OrderService {
         );
     }
 
+
+    // Locks in ascending product ID order prevent overselling and crossed-cart deadlocks.
+    // Refresh matters: CartItem may already have loaded Product in this persistence context.
+    private List<CartItem> validatedItems(Long userId, Cart cart) {
+        List<CartItem> items = cartItemRepository.findByCart_Id(cart.getId());
+        if (items.isEmpty()) throw new InvalidCartException("No se puede comprar con el carrito vacío");
+        items.sort(java.util.Comparator.comparing(item -> item.getProduct().getId()));
+        for (CartItem item : items) {
+            entityManager.refresh(item.getProduct(), jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        }
+
+        for (CartItem item : items) {
+
+            Product product = item.getProduct();
+
+            if (product.getStatus() != ProductStatus.ACTIVO) {
+                throw new InvalidCartException(
+                        "El producto " + product.getId()
+                                + " ya no está disponible");
+            }
+
+            if (item.getQuantity() == null || item.getQuantity() <= 0) {
+                throw new InvalidCartException(
+                        "Cantidad inválida para el producto "
+                                + product.getId());
+            }
+
+            if (item.getQuantity() > product.getStock()) {
+                throw new InvalidCartException(
+                        "Stock insuficiente para el producto "
+                                + product.getId());
+            }
+
+            if (product.getSeller().getId().equals(userId)) {
+                throw new InvalidCartException(
+                        "No se puede comprar un producto propio");
+            }
+
+        }
+        return items;
+    }
+
+    private CheckoutPreviewResponse calculate(List<CartItem> items, CheckoutRequest request) {
+        PromotionApplicationResponse result = promotionService.applyPromotions(items, request.getPaymentMethod());
+        CheckoutPreviewResponse preview = new CheckoutPreviewResponse();
+        BigDecimal subtotal = items.stream().map(item -> item.getProduct().getPrice()
+                .multiply(BigDecimal.valueOf(item.getQuantity()))).reduce(BigDecimal.ZERO, BigDecimal::add);
+        preview.setSubtotal(subtotal);
+        preview.setTotalDiscount(result.getTotalDiscount());
+        preview.setTotal(subtotal.subtract(result.getTotalDiscount()));
+        preview.setPromotions(result.getAppliedPromotions());
+        return preview;
+    }
+
+    private Cart lockedCart(Long userId) {
+        // Same lock used by cart mutations, including creation of the first cart.
+        userRepository.lockById(userId).orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        return cartRepository.findByUserId(userId).orElseThrow(() -> new ResourceNotFoundException("Carrito no encontrado"));
+    }
+
+    @Override
+    @Transactional
+    public CheckoutPreviewResponse preview(Long userId, CheckoutRequest request) {
+        return calculate(validatedItems(userId, lockedCart(userId)), request);
+    }
 
     @Override
     @Transactional(readOnly = true)
