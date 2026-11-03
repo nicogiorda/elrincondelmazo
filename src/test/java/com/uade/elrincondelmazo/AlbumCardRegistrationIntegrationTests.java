@@ -84,7 +84,7 @@ class AlbumCardRegistrationIntegrationTests {
         p.setCreated_at(LocalDateTime.now());
         p.setCollection(collection);
         p.setSeller(seller);
-        p.setImageUrls(List.of("https://example.invalid/products/" + UUID.randomUUID() + ".webp"));
+        p.setImageUrls(new java.util.ArrayList<>(List.of("https://example.invalid/products/" + UUID.randomUUID() + ".webp")));
         return products.saveAndFlush(p);
     }
 
@@ -167,8 +167,9 @@ class AlbumCardRegistrationIntegrationTests {
         OrderItem item = purchase(owner, p, 1, StateOrder.PENDIENTE);
         long cardId = addPurchase(item, "MY_LITTLE_PONY", 1, 8);
         p.setName("Renamed after purchase");
-        p.setImageUrls(List.of("https://example.invalid/changed.webp"));
-        products.saveAndFlush(p);
+        p.getImageUrls().clear();
+        p.getImageUrls().add("https://example.invalid/changed.webp");
+        products.flush();
         AlbumCard saved = albumCards.findById(cardId).orElseThrow();
         assertThat(saved.getName()).isEqualTo("Original name");
         assertThat(saved.getImageUrl()).isEqualTo(firstImage);
