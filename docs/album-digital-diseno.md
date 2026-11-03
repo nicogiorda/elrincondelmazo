@@ -10,11 +10,18 @@ Estado: propuesta de arquitectura; **sin implementación ni cambios de esquema**
 - Se puede agregar una carta desde un ítem de compra elegible o registrar una carta física con fotografía. Agregar desde una compra es optativo, nunca automático.
 - Se puede mover, quitar y reemplazar una carta. Reemplazar requiere confirmación en la interfaz; el backend debe ser transaccional.
 - El usuario elige si su álbum es PUBLIC o PRIVATE (por defecto PRIVATE). Los visitantes solo leen álbumes PUBLIC; el dueño puede leer y editar el suyo.
-- Un registro manual **no verifica propiedad física**. Un registro desde pedido acredita asociación a una operación registrada, **no pago ni posesión actual**.
+- Un registro manual **no verifica propiedad física**. Un registro desde pedido acredita que el usuario confirmó la compra en esta plataforma, **sin pasarela de pagos real ni verificación de pago externo o posesión actual**.
 
-## Decisión pendiente antes de implementar compras
+## Regla de negocio confirmada: compras sin pasarela de pagos
 
-**¿Cuándo se permite agregar una carta de pedido y con qué etiqueta?** El checkout actual crea pedidos `PENDIENTE`, no procesa el pago. Propuesta segura: habilitar el distintivo «Compra confirmada» solo para estados que el negocio considere confirmados (p. ej. PAGO/ENTREGADO), y no marcar PENDIENTE como verificado. El usuario debe aprobar la regla exacta antes de la etapa de compras. No asumir cambios de estado automáticos.
+La plataforma **no implementará pagos reales**. Cuando el usuario pulsa «Confirmar compra» y el checkout responde exitosamente creando un pedido, esa operación cuenta como **compra realizada dentro de El Rincón del Mazo** y sus cartas de tipo CARTA quedan inmediatamente disponibles para incorporar al álbum, incluso si el estado técnico del pedido es `PENDIENTE`.
+
+- No exigir `PAGO` ni `ENTREGADO` para habilitar las cartas: esos estados no representan el flujo funcional acordado.
+- No agregar cartas automáticamente al álbum; el usuario elige sección, página y posición.
+- Cada unidad de `OrderItem.quantity` permite como máximo una carta PURCHASE colocada a la vez. Quitarla del álbum libera nuevamente esa unidad para colocarla, sin duplicarla.
+- Excluir pedidos `CANCELADO` de nuevas altas. Si en el futuro se habilita cancelación posterior a la incorporación, definir su tratamiento explícitamente; no borrar álbumes de manera silenciosa.
+- La etiqueta visible «Compra en la plataforma» o «Compra registrada» identifica el origen, **no acredita un pago bancario real**.
+- No modificar checkout, estados ni integración de pagos para implementar esta funcionalidad.
 
 ## Convenciones observadas en el código
 
@@ -42,7 +49,7 @@ Se recomienda migración SQL versionada y revisada, sin operaciones destructivas
 | Método | Ruta | Acceso | Resultado |
 |---|---|---|---|
 | GET | `/albums/me` | autenticado | álbum, secciones, páginas y cartas |
-| GET | `/albums/me/purchases` | autenticado | ítems CARTA elegibles y cantidades restantes |
+| GET | `/albums/me/purchases` | autenticado | ítems CARTA de compras confirmadas en checkout y cantidades disponibles |
 | POST | `/albums/me/cards/manual` | autenticado | alta con `multipart/form-data`, sección/página/posición/nombre/foto |
 | POST | `/albums/me/cards/purchase` | autenticado | alta con `orderItemId` y destino |
 | PATCH | `/albums/me/cards/{cardId}` | propietario | movimiento/cambio de posición o datos permitidos |
